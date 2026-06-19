@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic
+jinja2
+simpleeval
+pynput
+watchdog
+psutil
