@@ -12,9 +12,16 @@ class _HoverCard extends StatefulWidget {
 
 class _HoverCardState extends State<_HoverCard> {
   bool _isHovered = false;
+  bool _suppressHover = false;
+
+  void setSuppressed(bool value) {
+    setState(() => _suppressHover = value);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final showHover = _isHovered && !_suppressHover;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
@@ -27,8 +34,8 @@ class _HoverCardState extends State<_HoverCard> {
           shape: BoxShape.rectangle,
           borderRadius: BorderRadius.circular(8),
           clipBehavior: Clip.antiAlias,
-          elevation: _isHovered ? 8 : 2,
-          color: Colors.transparent, // let Material paint the surface
+          elevation: showHover ? 8 : 2,
+          color: Colors.transparent,
           shadowColor: Colors.black,
           child: Material(
             color: Theme.of(context).colorScheme.surfaceContainerLow,
@@ -45,8 +52,68 @@ class _HoverCardState extends State<_HoverCard> {
   }
 }
 
-class ShortcutCard extends StatelessWidget {
+class _EditButton extends StatefulWidget {
+  final VoidCallback onTap;
+  final ValueChanged<bool> onHoverEnter;
+
+  const _EditButton({required this.onTap, required this.onHoverEnter});
+
+  @override
+  State<_EditButton> createState() => _EditButtonState();
+}
+
+class _EditButtonState extends State<_EditButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() => _isHovered = true);
+        widget.onHoverEnter(true);
+      },
+      onExit: (_) {
+        setState(() => _isHovered = false);
+        widget.onHoverEnter(false);
+      },
+      // fixed-size hit area, no padding shift
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Center(
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 150),
+            scale: _isHovered ? 1.12 : 1.0,
+            child: Material(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              shape: const CircleBorder(),
+              elevation: _isHovered ? 6 : 0,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: widget.onTap,
+                child: const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Icon(Icons.edit, size: 20),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ShortcutCard extends StatefulWidget {
   const ShortcutCard({super.key});
+
+  @override
+  State<ShortcutCard> createState() => _ShortcutCardState();
+}
+
+class _ShortcutCardState extends State<ShortcutCard> {
+  final _hoverCardKey = GlobalKey<_HoverCardState>();
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +121,7 @@ class ShortcutCard extends StatelessWidget {
       width: 270.0,
       height: 160.0,
       child: _HoverCard(
+        key: _hoverCardKey,
         onTap: () {},
         child: Stack(
           children: [
@@ -71,23 +139,25 @@ class ShortcutCard extends StatelessWidget {
                     'Shortcut',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  const SizedBox(height: 2.0),
+                  Text(
+                    '67 actions',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
                 ],
               ),
             ),
             Align(
               alignment: Alignment.bottomRight,
               child: Padding(
-                padding: EdgeInsets.all(16),
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer,
-                  child: Icon(
-                    Icons.edit,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
+                padding: const EdgeInsets.all(16),
+                child: _EditButton(
+                  onTap: () {
+                    // edit action — separate from card tap
+                  },
+                  onHoverEnter: (hovered) {
+                    _hoverCardKey.currentState?.setSuppressed(hovered);
+                  },
                 ),
               ),
             ),
