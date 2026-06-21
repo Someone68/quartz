@@ -1,3 +1,4 @@
+import threading
 import time
 from datetime import datetime
 
@@ -10,6 +11,7 @@ from models import (
     LoopStep,
     RepeatStep,
     RunLog,
+    RunShortcutStep,
     SetVarStep,
     Shortcut,
     Step,
@@ -73,6 +75,30 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
 
         case SetVarStep():
             context["variables"][step.var_name] = resolve(step.value, context)
+
+        case RunShortcutStep():
+            nested = storage.load_shortcut(step.shortcut_id)
+            if not nested:
+                raise ValueError(f"Shortcut not found: {step.shortcut_id}")
+            resolved_inputs = {k: resolve(v, context) for k, v in step.inputs.items()}
+            nested_trigger_meta = {
+                "type": "nested",
+                "parent": context["trigger"],
+                **resolved_inputs,
+            }
+
+            if step.wait:
+                nested_run = run_shortcut(nested, nested_trigger_meta)  # recursive call
+                context["steps"][step.id] = {
+                    "status": nested_run.status,
+                    "outputs": nested_run.step_outputs,
+                }
+                if nested_run.status == "failed":
+                    raise RuntimeError(f"Nested shortcut failed: {nested_run.error}")
+            else:
+                threading.Thread(
+                    target=run_shortcut, args=(nested, nested_trigger_meta)
+                ).start()
 
         case IfStep():
             branch = (

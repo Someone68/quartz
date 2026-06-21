@@ -57,6 +57,13 @@ class SetVarStep(StepBase):
     value: Any
 
 
+class RunShortcutStep(StepBase):
+    type: Literal["run_shortcut"] = "run_shortcut"
+    shortcut_id: str
+    inputs: dict[str, Any] = {}
+    wait: bool = True
+
+
 class IfStep(StepBase):
     type: Literal["if"] = "if"
     condition: str
@@ -90,7 +97,14 @@ class StopStep(StepBase):
 
 
 Step = Annotated[
-    ActionStep | SetVarStep | IfStep | LoopStep | RepeatStep | WaitStep | StopStep,
+    ActionStep
+    | SetVarStep
+    | IfStep
+    | LoopStep
+    | RepeatStep
+    | WaitStep
+    | StopStep
+    | RunShortcutStep,
     Field(discriminator="type"),
 ]
 
