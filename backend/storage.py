@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
-from models import RunLog, Shortcut, Step
+from models import RunLog, Shortcut, ShortcutSummary, Step
 from pydantic.type_adapter import TypeAdapter
 
 CONFIG_DIR = Path("~/.config/quartz").expanduser()
@@ -18,20 +18,23 @@ def _ensure_dirs():
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def load_all_shortcuts() -> list[Shortcut]:
+def load_all_shortcut_summaries() -> list[ShortcutSummary]:
     _ensure_dirs()
-    shortcuts = []
+    summaries = []
     for file in SHORTCUTS_DIR.glob("*.json"):
         try:
             data = json.loads(file.read_text())
-            data["steps"] = [
-                StepAdapter.validate_python(step) for step in data.get("steps", [])
-            ]
-            shortcuts.append(Shortcut(**data))
+            summaries.append(
+                ShortcutSummary(
+                    id=data["id"],
+                    name=data["name"],
+                    icon=data.get("icon"),
+                    step_count=len(data.get("steps", [])),
+                )
+            )
         except Exception as e:
             print(f"Failed to load shortcut {file}: {e}")
-            pass
-    return shortcuts
+    return summaries
 
 
 def save_run(run: RunLog):

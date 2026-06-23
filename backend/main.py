@@ -28,7 +28,7 @@ app.add_middleware(
 
 @app.get("/shortcuts")
 def list_shortcuts():
-    return storage.load_all_shortcuts()
+    return storage.load_all_shortcut_summaries()
 
 
 @app.post("/shortcuts", status_code=201)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ui/shortcut.dart';
 
 class _HoverCard extends StatefulWidget {
   final VoidCallback onTap;
@@ -106,7 +107,8 @@ class _EditButtonState extends State<_EditButton> {
 }
 
 class ShortcutCard extends StatefulWidget {
-  const ShortcutCard({super.key});
+  final ShortcutSummary shortcutSummary;
+  const ShortcutCard({super.key, required this.shortcutSummary});
 
   @override
   State<ShortcutCard> createState() => _ShortcutCardState();
@@ -136,12 +138,12 @@ class _ShortcutCardState extends State<ShortcutCard> {
                   ),
                   const SizedBox(height: 4.0),
                   Text(
-                    'Shortcut',
+                    widget.shortcutSummary.name,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 2.0),
                   Text(
-                    '67 actions',
+                    '${widget.shortcutSummary.stepCount} actions',
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ],

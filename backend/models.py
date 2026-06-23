@@ -143,3 +143,10 @@ class RunLog(BaseModel):
     status: Literal["success", "failed", "stopped", "running"]
     error: str | None = None
     step_outputs: dict[str, Any] = {}
+
+
+class ShortcutSummary(BaseModel):
+    id: str
+    name: str
+    icon: str | None
+    step_count: int
