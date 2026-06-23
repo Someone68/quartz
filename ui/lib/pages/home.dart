@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ui/shortcut.dart';
-import 'package:ui/shortcut_card.dart';
+import 'package:ui/modules/shortcut_card.dart';
 
 List<ShortcutSummary> shortcutSummaries = [
   ShortcutSummary(id: 'test', name: 'test', icon: '', stepCount: 69),

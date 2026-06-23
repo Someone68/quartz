@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'home.dart';
-import 'editor.dart';
-import 'settings.dart';
+import 'pages/home.dart';
+import 'pages/editor.dart';
+import 'pages/settings.dart';
 
 /// Top-level frame: a thin icon-only nav rail on the left and the active page
 /// on the right. Pages are kept alive in an [IndexedStack] so switching tabs
@@ -23,11 +23,7 @@ class _AppShellState extends State<AppShell> {
     _Dest(Icons.settings_outlined, Icons.settings, 'Settings'),
   ];
 
-  static const _pages = [
-    HomePage(),
-    EditorPage(),
-    SettingsPage(),
-  ];
+  static const _pages = [HomePage(), EditorPage(), SettingsPage()];
 
   @override
   Widget build(BuildContext context) {

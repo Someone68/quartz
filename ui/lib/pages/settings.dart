@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'theme_notifier.dart';
+import '../theme_notifier.dart';
 
 /// App settings. Currently just theme controls; more to follow.
 class SettingsPage extends StatelessWidget {
