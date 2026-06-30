@@ -1,15 +1,29 @@
 import 'package:flutter/material.dart';
 
 class StepCard extends StatelessWidget {
-  const StepCard({super.key});
+  final IconData icon;
+  final String label;
+  final Color? iconColor;
+  final bool isSelected;
+
+  const StepCard({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.iconColor,
+    this.isSelected = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       child: Card(
+        color: isSelected
+            ? Theme.of(context).colorScheme.secondaryContainer
+            : null,
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: 60),
+          constraints: const BoxConstraints(minHeight: 60),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Align(
@@ -20,16 +34,15 @@ class StepCard extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      color:
+                          iconColor ??
+                          Theme.of(context).colorScheme.primaryContainer,
                     ),
-                    child: Icon(Icons.star_rounded, size: 24),
+                    child: Icon(icon, size: 24),
                   ),
-                  SizedBox(width: 16),
-                  Text(
-                    "this is a test action",
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
+                  const SizedBox(width: 16),
+                  Text(label, style: Theme.of(context).textTheme.bodyLarge),
                 ],
               ),
             ),
