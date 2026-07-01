@@ -1,5 +1,6 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:ui/modules/action_libary.dart';
 import 'package:ui/modules/resizable_container.dart';
 import 'package:ui/modules/step_card.dart';
 
@@ -70,30 +71,33 @@ class AddActionButton extends StatelessWidget {
     return SizedBox(
       // width: double.infinity,
       height: 60,
-      child: DottedBorder(
-        color: Theme.of(context).colorScheme.surfaceBright,
-        strokeWidth: 2,
-        dashPattern: const [8, 4], // dash, gap
-        borderType: BorderType.RRect,
-        radius: const Radius.circular(8),
-        child: Container(
-          color: Theme.of(context).colorScheme.surface,
-          padding: const EdgeInsets.all(0.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 60),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  children: [
-                    Icon(Icons.add, size: 24),
-                    const SizedBox(width: 16),
-                    Text(
-                      "Add Action",
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                  ],
+      child: GestureDetector(
+        onTap: () => showActionLibrary(context, ["a", "b", "c"]),
+        child: DottedBorder(
+          color: Theme.of(context).colorScheme.surfaceBright,
+          strokeWidth: 2,
+          dashPattern: const [8, 4], // dash, gap
+          borderType: BorderType.RRect,
+          radius: const Radius.circular(8),
+          child: Container(
+            color: Theme.of(context).colorScheme.surface,
+            padding: const EdgeInsets.all(0.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 60),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      Icon(Icons.add, size: 24),
+                      const SizedBox(width: 16),
+                      Text(
+                        "Add Action",
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
