@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:ui/modules/misc.dart';
+import 'package:ui/types.dart';
 
-void showActionLibrary(BuildContext context, List<String> items) {
-  showModalBottomSheet(
+Future<ActionSummary?> showActionLibrary(
+  BuildContext context,
+  List<ActionSummary> items,
+) {
+  return showModalBottomSheet<ActionSummary>(
     context: context,
     isScrollControlled: true,
     builder: (context) => ActionLibrary(items: items),
@@ -9,7 +14,7 @@ void showActionLibrary(BuildContext context, List<String> items) {
 }
 
 class ActionLibrary extends StatefulWidget {
-  final List<String> items;
+  final List<ActionSummary> items;
 
   ActionLibrary({required this.items});
 
@@ -18,7 +23,7 @@ class ActionLibrary extends StatefulWidget {
 }
 
 class _ActionLibraryState extends State<ActionLibrary> {
-  late List<String> filtered;
+  late List<ActionSummary> filtered;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -30,7 +35,11 @@ class _ActionLibraryState extends State<ActionLibrary> {
   void _filterItems(String query) {
     setState(() {
       filtered = widget.items
-          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+          .where(
+            (item) => ("${item.category}: ${item.name}").toLowerCase().contains(
+              query.toLowerCase(),
+            ),
+          )
           .toList();
     });
   }
@@ -61,7 +70,14 @@ class _ActionLibraryState extends State<ActionLibrary> {
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(filtered[index]),
+                    leading: buildStyledIcon(
+                      context,
+                      Theme.of(context).colorScheme.primaryContainer,
+                      symbolFromName(filtered[index].icon),
+                    ),
+                    title: Text(
+                      "${filtered[index].category}: ${filtered[index].name}",
+                    ),
                     onTap: () => Navigator.pop(context, filtered[index]),
                   );
                 },

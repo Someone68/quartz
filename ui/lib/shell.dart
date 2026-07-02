@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'pages/home.dart';
 import 'pages/editor.dart';
 import 'pages/settings.dart';
+import 'types.dart';
 
 /// Top-level frame: a thin icon-only nav rail on the left and the active page
 /// on the right. Pages are kept alive in an [IndexedStack] so switching tabs
@@ -31,7 +32,21 @@ class _AppShellState extends State<AppShell> {
     _Dest(Icons.settings_outlined, Icons.settings, 'Settings'),
   ];
 
-  static const _pages = [HomePage(), EditorPage(), SettingsPage()];
+  static final _pages = [
+    HomePage(),
+    EditorPage(
+      shortcut: Shortcut(
+        id: '',
+        name: '',
+        description: '',
+        icon: '',
+        enabled: false,
+        trigger: Trigger(type: ''),
+        steps: [],
+      ),
+    ),
+    SettingsPage(),
+  ];
 
   bool get _editorActive => _index == _kEditorIndex;
 

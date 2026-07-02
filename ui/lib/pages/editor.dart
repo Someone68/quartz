@@ -1,14 +1,27 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:ui/modules/action_libary.dart';
+import 'package:ui/modules/misc.dart';
 import 'package:ui/modules/resizable_container.dart';
 import 'package:ui/modules/step_card.dart';
+import 'package:ui/types.dart';
 
 /// Shortcut editor — trigger + step list. Placeholder until the builder UI
 /// lands.
-class EditorPage extends StatelessWidget {
-  const EditorPage({super.key});
 
+class EditorPage extends StatefulWidget {
+  final Shortcut shortcut;
+
+  const EditorPage({super.key, required this.shortcut});
+
+  @override
+  State<EditorPage> createState() => EditorPageState();
+}
+
+class EditorPageState extends State<EditorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,12 +38,23 @@ class EditorPage extends StatelessWidget {
               child: Column(
                 spacing: 16.0,
                 children: [
-                  StepCard(
-                    label: "test",
-                    icon: Icons.star_rounded,
-                    iconColor: Theme.of(context).colorScheme.primaryContainer,
+                  ...widget.shortcut.steps
+                      .map(
+                        (s) => StepCard(
+                          label: s.label ?? "error",
+                          icon: symbolFromName(s.icon) ?? Icons.warning_rounded,
+                          iconColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
+                        ),
+                      )
+                      .toList(),
+                  AddActionButton(
+                    onActionSelected: (action) {
+                      widget.shortcut.addActionStep(action: action);
+                      setState(() {});
+                    },
                   ),
-                  AddActionButton(),
                 ],
               ),
             ),
@@ -63,8 +87,32 @@ class EditorPage extends StatelessWidget {
   }
 }
 
+// get action summaries from tmp_actions_list.json
+List<ActionSummary> getActionSummaries() {
+  final actionsMap =
+      jsonDecode(File('lib/tmp_actions_list.json').readAsStringSync())
+          as Map<String, dynamic>;
+
+  return actionsMap.entries
+      .expand<ActionSummary>(
+        (entry) => (entry.value as List<dynamic>).map(
+          (action) => ActionSummary(
+            id: action['id'],
+            name: action['name'],
+            description: action['description'],
+            icon: action['icon'],
+            platforms: List<String>.from(action['platforms']),
+            category: entry.key,
+          ),
+        ),
+      )
+      .toList();
+}
+
 class AddActionButton extends StatelessWidget {
-  const AddActionButton({super.key});
+  final ValueChanged<ActionSummary>? onActionSelected;
+
+  const AddActionButton({super.key, this.onActionSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +120,10 @@ class AddActionButton extends StatelessWidget {
       // width: double.infinity,
       height: 60,
       child: GestureDetector(
-        onTap: () => showActionLibrary(context, ["a", "b", "c"]),
+        onTap: () async {
+          final action = await showActionLibrary(context, getActionSummaries());
+          if (action != null) onActionSelected?.call(action);
+        },
         child: DottedBorder(
           color: Theme.of(context).colorScheme.surfaceBright,
           strokeWidth: 2,

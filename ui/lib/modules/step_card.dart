@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ui/modules/misc.dart';
 
 class StepCard extends StatelessWidget {
   final IconData icon;
@@ -30,16 +31,10 @@ class StepCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Row(
                 children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      color:
-                          iconColor ??
-                          Theme.of(context).colorScheme.primaryContainer,
-                    ),
-                    child: Icon(icon, size: 24),
+                  buildStyledIcon(
+                    context,
+                    iconColor ?? Theme.of(context).colorScheme.primaryContainer,
+                    icon,
                   ),
                   const SizedBox(width: 16),
                   Text(label, style: Theme.of(context).textTheme.bodyLarge),

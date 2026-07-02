@@ -1,0 +1,51 @@
+{
+  "Shell": [
+    {
+      "id": "shell.run_command",
+      "category": "Shell",
+      "name": "Run Command",
+      "description": "Run a shell command and capture its output.",
+      "icon": "terminal",
+      "platforms": ["linux", "windows"],
+      "inputs": [
+        {
+          "name": "command",
+          "type": "string",
+          "label": "Command",
+          "required": true,
+          "default": null,
+          "options": null,
+          "min": null,
+          "max": null
+        },
+        {
+          "name": "timeout",
+          "type": "number",
+          "label": "Timeout (seconds)",
+          "required": false,
+          "default": 30,
+          "options": null,
+          "min": 1,
+          "max": 300
+        }
+      ],
+      "outputs": [
+        {
+          "name": "stdout",
+          "type": "string",
+          "label": "Standard output"
+        },
+        {
+          "name": "stderr",
+          "type": "string",
+          "label": "Standard error"
+        },
+        {
+          "name": "exit_code",
+          "type": "number",
+          "label": "Exit code"
+        }
+      ]
+    }
+  ]
+}
