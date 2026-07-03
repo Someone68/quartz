@@ -1,6 +1,7 @@
 import threading
 import time
 from datetime import datetime
+from locale import format_string
 
 import registry
 import storage
@@ -77,9 +78,11 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
             context["variables"][step.var_name] = resolve(step.value, context)
 
         case RunShortcutStep():
-            nested = storage.load_shortcut(step.shortcut_id)
+            nested = storage.load_shortcut(format_string(step.shortcut_id, context))
             if not nested:
-                raise ValueError(f"Shortcut not found: {step.shortcut_id}")
+                raise ValueError(
+                    f"Shortcut not found: {format_string(step.shortcut_id, context)}"
+                )
             resolved_inputs = {k: resolve(v, context) for k, v in step.inputs.items()}
             nested_trigger_meta = {
                 "type": "nested",
@@ -102,7 +105,9 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
 
         case IfStep():
             branch = (
-                step.then if evaluate_condition(step.condition, context) else step.else_
+                step.then
+                if evaluate_condition(format_string(step.condition, context), context)
+                else step.else_
             )
             _run_steps(branch, context, steps_by_id)
 
