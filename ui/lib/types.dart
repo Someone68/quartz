@@ -592,12 +592,7 @@ class Shortcut {
       case 'stop':
         step = StopStep(id: id, icon: def.icon, label: def.name);
       case 'set_var':
-        step = SetVarStep(
-          id: id,
-          icon: def.icon,
-          label: def.name,
-          varName: '',
-        );
+        step = SetVarStep(id: id, icon: def.icon, label: def.name, varName: '');
       default:
         steps.add(
           ActionStep(

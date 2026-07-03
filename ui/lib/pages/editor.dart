@@ -79,10 +79,10 @@ class EditorPageState extends State<EditorPage> {
                     onActionSelected: (action) {
                       final def = _actionDefs[action.id];
                       if (def == null) return;
-                      widget.shortcut.addStep(def: def);
-                      setState(
-                        () => _selectedIndex = widget.shortcut.steps.length - 1,
-                      );
+                      setState(() {
+                        widget.shortcut.addStep(def: def);
+                        _selectedIndex = widget.shortcut.steps.length - 1;
+                      });
                     },
                   ),
                 ],
@@ -110,6 +110,14 @@ class EditorPageState extends State<EditorPage> {
                       key: ValueKey(selected?.id),
                       def: selectedDef,
                       step: selected,
+                      onDelete: selected == null
+                          ? null
+                          : () => setState(() {
+                              widget.shortcut.steps.removeWhere(
+                                (s) => s.id == selected.id,
+                              );
+                              _selectedIndex = null;
+                            }),
                     ),
                   ),
                 ),
@@ -247,9 +255,7 @@ List<ActionDef> getControlFlowDefs() => [
     description: 'Halt the shortcut.',
     icon: 'stop_circle',
     platforms: const ['linux', 'windows'],
-    inputs: [
-      ActionInput(name: 'message', type: 'string', label: 'Message'),
-    ],
+    inputs: [ActionInput(name: 'message', type: 'string', label: 'Message')],
     outputs: const [],
   ),
 ];
@@ -334,7 +340,11 @@ class InspectorPanel extends StatefulWidget {
   /// flow).
   final Step? step;
 
-  const InspectorPanel({super.key, this.def, this.step});
+  /// Called when the Delete button is pressed. The parent owns the step list
+  /// and its rebuild, so removal happens there.
+  final VoidCallback? onDelete;
+
+  const InspectorPanel({super.key, this.def, this.onDelete, this.step});
 
   @override
   State<InspectorPanel> createState() => InspectorPanelState();
@@ -356,8 +366,29 @@ class InspectorPanelState extends State<InspectorPanel> {
               'Select a step to edit its inputs.',
               style: Theme.of(context).textTheme.bodySmall,
             )
-          else
-            ...def.inputs.map((input) => _buildField(context, input)),
+          else ...[
+            Expanded(
+              child: ListView(
+                children: [
+                  ...def.inputs.map((input) => _buildField(context, input)),
+                ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: ElevatedButton.icon(
+                label: const Text("Delete"),
+                icon: const Icon(Icons.delete),
+                onPressed: widget.onDelete,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
