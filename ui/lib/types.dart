@@ -118,16 +118,24 @@ sealed class Step {
   final String? label;
   final bool enabled;
   final String? icon;
+  final Map<String, dynamic> inputs;
 
   Step({
     required this.id,
     required this.type,
+    this.inputs = const {},
     this.label,
     this.enabled = true,
     this.icon,
   });
 
   Map<String, dynamic> toJson();
+
+  // Schema-driven config access for the inspector. Default backs onto the
+  // generic `inputs` map (ActionStep). Typed steps (if/loop/...) override to
+  // route named schema fields to/from their typed config fields.
+  dynamic getField(String name) => inputs[name];
+  void setField(String name, dynamic value) => inputs[name] = value;
 
   static Step fromJson(Map<String, dynamic> j) {
     switch (j['type']) {
@@ -155,15 +163,14 @@ sealed class Step {
 
 class ActionStep extends Step {
   final String actionId;
-  final Map<String, dynamic> inputs;
 
   ActionStep({
     required super.id,
     required super.icon,
+    required super.inputs,
     super.label,
     super.enabled,
     required this.actionId,
-    this.inputs = const {},
   }) : super(type: 'action');
 
   factory ActionStep.fromJson(Map<String, dynamic> j) => ActionStep(
@@ -188,11 +195,12 @@ class ActionStep extends Step {
 }
 
 class SetVarStep extends Step {
-  final String varName;
-  final dynamic value;
+  String varName;
+  dynamic value;
 
   SetVarStep({
     required super.id,
+    super.icon,
     super.label,
     super.enabled,
     required this.varName,
@@ -201,11 +209,31 @@ class SetVarStep extends Step {
 
   factory SetVarStep.fromJson(Map<String, dynamic> j) => SetVarStep(
     id: j['id'],
+    icon: j['icon'] ?? 'data_object',
     label: j['label'],
     enabled: j['enabled'] ?? true,
     varName: j['var_name'],
     value: j['value'],
   );
+
+  @override
+  dynamic getField(String name) => switch (name) {
+    'var_name' => varName,
+    'value' => value,
+    _ => super.getField(name),
+  };
+
+  @override
+  void setField(String name, dynamic v) {
+    switch (name) {
+      case 'var_name':
+        varName = v?.toString() ?? '';
+      case 'value':
+        value = v;
+      default:
+        super.setField(name, v);
+    }
+  }
 
   @override
   Map<String, dynamic> toJson() => {
@@ -215,6 +243,7 @@ class SetVarStep extends Step {
     'enabled': enabled,
     'var_name': varName,
     'value': value,
+    'icon': icon,
   };
 }
 
@@ -254,7 +283,7 @@ class RunShortcutStep extends Step {
 }
 
 class IfStep extends Step {
-  final String condition;
+  String condition;
   final List<String> then;
   final List<String> else_;
 
@@ -288,11 +317,24 @@ class IfStep extends Step {
     'then': then,
     'else': else_,
   };
+
+  @override
+  dynamic getField(String name) =>
+      name == 'condition' ? condition : super.getField(name);
+
+  @override
+  void setField(String name, dynamic v) {
+    if (name == 'condition') {
+      condition = v?.toString() ?? '';
+    } else {
+      super.setField(name, v);
+    }
+  }
 }
 
 class LoopStep extends Step {
-  final String over;
-  final String variable;
+  String over;
+  String variable;
   final List<String> steps;
 
   LoopStep({
@@ -325,10 +367,29 @@ class LoopStep extends Step {
     'variable': variable,
     'steps': steps,
   };
+
+  @override
+  dynamic getField(String name) => switch (name) {
+    'over' => over,
+    'variable' => variable,
+    _ => super.getField(name),
+  };
+
+  @override
+  void setField(String name, dynamic v) {
+    switch (name) {
+      case 'over':
+        over = v?.toString() ?? '';
+      case 'variable':
+        variable = v?.toString() ?? '';
+      default:
+        super.setField(name, v);
+    }
+  }
 }
 
 class RepeatStep extends Step {
-  final int times;
+  int times;
   final List<String> steps;
 
   RepeatStep({
@@ -358,10 +419,23 @@ class RepeatStep extends Step {
     'times': times,
     'steps': steps,
   };
+
+  @override
+  dynamic getField(String name) =>
+      name == 'times' ? times : super.getField(name);
+
+  @override
+  void setField(String name, dynamic v) {
+    if (name == 'times') {
+      times = (v as num?)?.toInt() ?? 0;
+    } else {
+      super.setField(name, v);
+    }
+  }
 }
 
 class WaitStep extends Step {
-  final int duration;
+  int duration;
 
   WaitStep({
     required super.id,
@@ -387,10 +461,23 @@ class WaitStep extends Step {
     'enabled': enabled,
     'duration': duration,
   };
+
+  @override
+  dynamic getField(String name) =>
+      name == 'duration' ? duration : super.getField(name);
+
+  @override
+  void setField(String name, dynamic v) {
+    if (name == 'duration') {
+      duration = (v as num?)?.toInt() ?? 0;
+    } else {
+      super.setField(name, v);
+    }
+  }
 }
 
 class StopStep extends Step {
-  final String? message;
+  String? message;
 
   StopStep({
     required super.id,
@@ -416,6 +503,19 @@ class StopStep extends Step {
     'enabled': enabled,
     'message': message,
   };
+
+  @override
+  dynamic getField(String name) =>
+      name == 'message' ? message : super.getField(name);
+
+  @override
+  void setField(String name, dynamic v) {
+    if (name == 'message') {
+      message = v?.toString();
+    } else {
+      super.setField(name, v);
+    }
+  }
 }
 
 // ---- Trigger ----
@@ -463,17 +563,60 @@ class Shortcut {
 
   Map<String, Step> stepsById() => {for (final s in steps) s.id: s};
 
-  void addActionStep({required ActionSummary action}) {
-    steps.add(
-      ActionStep(
-        actionId: action.id,
-        id: "s${steps.length}",
-        enabled: true,
-        inputs: {},
-        label: action.name,
-        icon: action.icon,
-      ),
-    );
+  /// Append a step from a palette def. `def.id` matches a control-flow step
+  /// type ('if', 'loop', ...) or an action id; actions fall through to the
+  /// default and carry their config in the generic `inputs` map. Scalar config
+  /// for control steps is seeded from the def schema via `setField`.
+  void addStep({required ActionDef def}) {
+    final id = "s${steps.length}";
+    final seed = <String, dynamic>{
+      for (final input in def.inputs) input.name: input.default_,
+    };
+
+    Step step;
+    switch (def.id) {
+      case 'if':
+        step = IfStep(id: id, icon: def.icon, label: def.name, condition: '');
+      case 'loop':
+        step = LoopStep(
+          id: id,
+          icon: def.icon,
+          label: def.name,
+          over: '',
+          variable: 'item',
+        );
+      case 'repeat':
+        step = RepeatStep(id: id, icon: def.icon, label: def.name, times: 1);
+      case 'wait':
+        step = WaitStep(id: id, icon: def.icon, label: def.name, duration: 0);
+      case 'stop':
+        step = StopStep(id: id, icon: def.icon, label: def.name);
+      case 'set_var':
+        step = SetVarStep(
+          id: id,
+          icon: def.icon,
+          label: def.name,
+          varName: '',
+        );
+      default:
+        steps.add(
+          ActionStep(
+            actionId: def.id,
+            id: id,
+            enabled: true,
+            inputs: seed,
+            label: def.name,
+            icon: def.icon,
+          ),
+        );
+        return;
+    }
+
+    // Seed scalar config fields from the schema defaults.
+    for (final input in def.inputs) {
+      if (input.default_ != null) step.setField(input.name, input.default_);
+    }
+    steps.add(step);
   }
 
   factory Shortcut.fromJson(Map<String, dynamic> j) => Shortcut(
