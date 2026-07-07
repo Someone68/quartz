@@ -1,16 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:ui/shortcut.dart';
+import 'package:ui/requests.dart';
+import 'package:ui/types.dart';
 import 'package:ui/modules/shortcut_card.dart';
-
-List<ShortcutSummary> shortcutSummaries = [
-  ShortcutSummary(id: 'test', name: 'test', icon: '', stepCount: 69),
-  ShortcutSummary(id: 'test2', name: 'test2', icon: '', stepCount: 67),
-];
 
 /// Shortcuts list — the landing page. Placeholder until shortcut storage and
 /// the list/grid view are wired up.
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+
+class HomePage extends StatefulWidget {
+  HomePage({super.key, required this.onEdit});
+
+  /// Opens a shortcut in the editor tab (provided by the shell).
+  final void Function(Shortcut) onEdit;
+
+  List<ShortcutSummary> shortcutSummaries = [];
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Future<void> _loadShortcuts() async {
+    final summaries = await getShortcuts();
+    if (!mounted) return;
+    setState(() => widget.shortcutSummaries = summaries);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadShortcuts();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +41,17 @@ class HomePage extends StatelessWidget {
           spacing: 16.0,
           runSpacing: 16.0,
           children: [
-            ...shortcutSummaries.map(
-              (summary) => ShortcutCard(shortcutSummary: summary),
+            ...widget.shortcutSummaries.map(
+              (summary) =>
+                  ShortcutCard(shortcutSummary: summary, onEdit: widget.onEdit),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () => widget.onEdit(
+          Shortcut(id: '', name: 'New Shortcut', trigger: Trigger(type: '')),
+        ),
         label: const Text('Create Shortcut'),
         icon: const Icon(Icons.add),
       ),

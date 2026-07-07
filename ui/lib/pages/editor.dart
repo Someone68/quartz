@@ -3,12 +3,14 @@ import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart' hide Step;
+import 'package:flutter/services.dart';
 import 'package:ui/color_map.dart';
 import 'package:ui/hue_scheme.dart';
 import 'package:ui/modules/action_libary.dart';
 import 'package:ui/modules/misc.dart';
 import 'package:ui/modules/resizable_container.dart';
 import 'package:ui/modules/step_card.dart';
+import 'package:ui/requests.dart';
 import 'package:ui/types.dart';
 
 /// Shortcut editor — trigger + step list. Placeholder until the builder UI
@@ -48,44 +50,128 @@ class EditorPageState extends State<EditorPage> {
         ? _actionDefs[selected.actionId]
         : _actionDefs[selected.type];
 
+    void _save(BuildContext context) {
+      saveShortcut(widget.shortcut)
+          .then((saved) {
+            // Adopt the server-minted id so subsequent saves update in place.
+            setState(() => widget.shortcut.id = saved.id);
+            print('saved successfully: ${saved.id}');
+          })
+          .catchError((e) {
+            print('save failed: $e');
+          });
+    }
+
     return Scaffold(
       // appBar: AppBar(title: const Text('Editor')),
       body: Row(
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(
-                left: 16.0,
-                right: 16.0,
-                top: 16.0,
-              ),
+              padding: const EdgeInsets.only(top: 16.0),
               child: Column(
                 spacing: 16.0,
                 children: [
-                  ...steps.asMap().entries.map(
-                    (e) => GestureDetector(
-                      onTap: () => setState(() => _selectedIndex = e.key),
-                      child: StepCard(
-                        label: e.value.label ?? "error",
-                        icon:
-                            symbolFromName(e.value.icon) ??
-                            Icons.warning_rounded,
-                        iconColor: context
-                            .hue(getColor(e.value.color ?? "cs-error", context))
-                            .primaryContainer,
-                        isSelected: _selectedIndex == e.key,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                    child: Column(
+                      spacing: 16.0,
+                      children: [
+                        ...steps.asMap().entries.map(
+                          (e) => GestureDetector(
+                            onTap: () => setState(() => _selectedIndex = e.key),
+                            child: StepCard(
+                              label: e.value.label ?? "error",
+                              icon:
+                                  symbolFromName(e.value.icon) ??
+                                  Icons.warning_rounded,
+                              iconColor: context
+                                  .hue(
+                                    getColor(
+                                      e.value.color ?? "cs-error",
+                                      context,
+                                    ),
+                                  )
+                                  .primaryContainer,
+                              isSelected: _selectedIndex == e.key,
+                              description: e.value.description,
+                            ),
+                          ),
+                        ),
+                        AddActionButton(
+                          onActionSelected: (action) {
+                            final def = _actionDefs[action.id];
+                            if (def == null) return;
+                            setState(() {
+                              widget.shortcut.addStep(def: def);
+                              _selectedIndex = widget.shortcut.steps.length - 1;
+                            });
+                          },
+                        ),
+                        FloatingActionButton.extended(
+                          label: Text("debug: print shortcut"),
+                          onPressed: () {
+                            printObject(widget.shortcut);
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                  AddActionButton(
-                    onActionSelected: (action) {
-                      final def = _actionDefs[action.id];
-                      if (def == null) return;
-                      setState(() {
-                        widget.shortcut.addStep(def: def);
-                        _selectedIndex = widget.shortcut.steps.length - 1;
-                      });
-                    },
+
+                  Spacer(),
+                  BottomAppBar(
+                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      spacing: 16,
+                      children: [
+                        SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.shortcut.name,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                              textAlign: TextAlign.left,
+                            ),
+                            Text(
+                              widget.shortcut.id,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withAlpha(128),
+                                  ),
+
+                              textAlign: TextAlign.left,
+                            ),
+                          ],
+                        ),
+                        Spacer(),
+                        ElevatedButton(
+                          child: const Text('Copy ID'),
+                          onPressed: () {
+                            Clipboard.setData(
+                              ClipboardData(text: widget.shortcut.id),
+                            );
+                            showSnackBar(context, 'ID copied to clipboard');
+                          },
+                        ),
+                        ElevatedButton(
+                          onPressed: () => _save(context),
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all(
+                              Theme.of(context).colorScheme.primaryContainer,
+                            ),
+                            foregroundColor: WidgetStateProperty.all(
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          child: const Text('Save'),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -71,18 +71,21 @@ class _ActionLibraryState extends State<ActionLibrary> {
               child: ListView.builder(
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: buildStyledIcon(
-                      context,
-                      context
-                          .hue(getColor(filtered[index].color, context))
-                          .primaryContainer,
-                      symbolFromName(filtered[index].icon),
+                  return Tooltip(
+                    message: filtered[index].description,
+                    child: ListTile(
+                      leading: buildStyledIcon(
+                        context,
+                        context
+                            .hue(getColor(filtered[index].color, context))
+                            .primaryContainer,
+                        symbolFromName(filtered[index].icon),
+                      ),
+                      title: Text(
+                        "${filtered[index].category}: ${filtered[index].name}",
+                      ),
+                      onTap: () => Navigator.pop(context, filtered[index]),
                     ),
-                    title: Text(
-                      "${filtered[index].category}: ${filtered[index].name}",
-                    ),
-                    onTap: () => Navigator.pop(context, filtered[index]),
                   );
                 },
               ),

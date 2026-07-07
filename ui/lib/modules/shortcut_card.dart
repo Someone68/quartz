@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ui/shortcut.dart';
+import 'package:ui/requests.dart';
+import 'package:ui/types.dart';
 
 class _HoverCard extends StatefulWidget {
   final VoidCallback onTap;
@@ -108,7 +109,12 @@ class _EditButtonState extends State<_EditButton> {
 
 class ShortcutCard extends StatefulWidget {
   final ShortcutSummary shortcutSummary;
-  const ShortcutCard({super.key, required this.shortcutSummary});
+  final void Function(Shortcut) onEdit;
+  const ShortcutCard({
+    super.key,
+    required this.shortcutSummary,
+    required this.onEdit,
+  });
 
   @override
   State<ShortcutCard> createState() => _ShortcutCardState();
@@ -155,7 +161,9 @@ class _ShortcutCardState extends State<ShortcutCard> {
                 padding: const EdgeInsets.all(16),
                 child: _EditButton(
                   onTap: () {
-                    // edit action — separate from card tap
+                    // Fetch full shortcut, then hand off to the shell which
+                    // swaps to the editor tab in-place (keeps the nav rail).
+                    getShortcut(widget.shortcutSummary.id).then(widget.onEdit);
                   },
                   onHoverEnter: (hovered) {
                     _hoverCardKey.currentState?.setSuppressed(hovered);

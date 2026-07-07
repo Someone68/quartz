@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated, Any, Callable, Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ActionInput(BaseModel):
@@ -133,6 +133,12 @@ class Shortcut(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
     model_config = {"arbitrary_types_allowed": True}
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def _ensure_id(cls, v: Any) -> str:
+        # Clients may send an empty id on create; mint one server-side.
+        return v or new_id()
 
     def steps_by_id(self) -> dict[str, Step]:
         return {step.id: step for step in self.steps}

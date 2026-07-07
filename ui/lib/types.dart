@@ -137,6 +137,10 @@ sealed class Step {
 
   Map<String, dynamic> toJson();
 
+  // Optional human-readable description. Base steps have none; typed steps
+  // that carry one (e.g. ActionStep) override this.
+  String? get description => null;
+
   // Schema-driven config access for the inspector. Default backs onto the
   // generic `inputs` map (ActionStep). Typed steps (if/loop/...) override to
   // route named schema fields to/from their typed config fields.
@@ -169,6 +173,8 @@ sealed class Step {
 
 class ActionStep extends Step {
   final String actionId;
+  @override
+  final String? description;
 
   ActionStep({
     required super.id,
@@ -178,6 +184,7 @@ class ActionStep extends Step {
     super.label,
     super.enabled,
     required this.actionId,
+    this.description,
   }) : super(type: 'action');
 
   factory ActionStep.fromJson(Map<String, dynamic> j) => ActionStep(
@@ -188,6 +195,7 @@ class ActionStep extends Step {
     inputs: (j['inputs'] as Map?)?.cast<String, dynamic>() ?? {},
     icon: j['icon'],
     color: j['color'],
+    description: j['description'],
   );
 
   @override
@@ -200,6 +208,7 @@ class ActionStep extends Step {
     'inputs': inputs,
     'icon': icon,
     'color': color,
+    'description': description,
   };
 }
 
@@ -570,7 +579,7 @@ class Trigger {
 // ---- Shortcut ----
 
 class Shortcut {
-  final String id;
+  String id;
   final String name;
   final String description;
   final String icon;
@@ -666,6 +675,7 @@ class Shortcut {
             label: def.name,
             icon: def.icon,
             color: def.color,
+            description: def.description,
           ),
         );
         return;

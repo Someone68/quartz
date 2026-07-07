@@ -22,6 +22,10 @@ class _AppShellState extends State<AppShell> {
   int _index = 0;
   bool _navOpen = false;
 
+  /// Shortcut currently loaded in the editor tab. Null until the user opens
+  /// one (edit button) or starts a new one (create button).
+  Shortcut? _editorShortcut;
+
   static const _kEditorIndex = 1;
   // Icon-only NavigationRail minimum width in Material 3.
   static const _kRailWidth = 72.0;
@@ -32,26 +36,29 @@ class _AppShellState extends State<AppShell> {
     _Dest(Icons.settings_outlined, Icons.settings, 'Settings'),
   ];
 
-  static final _pages = [
-    HomePage(),
-    EditorPage(
-      shortcut: Shortcut(
-        id: '',
-        name: '',
-        description: '',
-        icon: '',
-        enabled: false,
-        trigger: Trigger(type: ''),
-        steps: [],
-      ),
-    ),
-    SettingsPage(),
-  ];
-
   bool get _editorActive => _index == _kEditorIndex;
+
+  /// Load a shortcut into the editor and switch to it in-place, so the nav
+  /// rail stays available (no route push = no softlock).
+  void _openEditor(Shortcut shortcut) {
+    setState(() {
+      _editorShortcut = shortcut;
+      _index = _kEditorIndex;
+      _navOpen = false;
+    });
+  }
+
+  Shortcut _blankShortcut() => Shortcut(
+    id: '',
+    name: 'New Shortcut',
+    trigger: Trigger(type: ''),
+    steps: [],
+  );
 
   void _selectDestination(int i) {
     setState(() {
+      // Opening the editor tab with nothing loaded starts a new shortcut.
+      if (i == _kEditorIndex) _editorShortcut ??= _blankShortcut();
       _index = i;
       _navOpen = false;
     });
@@ -60,6 +67,14 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
+    final editorShortcut = _editorShortcut ??= _blankShortcut();
+    final pages = [
+      HomePage(onEdit: _openEditor),
+      // Key by id so loading a different shortcut rebuilds the editor fresh.
+      EditorPage(key: ValueKey(editorShortcut.id), shortcut: editorShortcut),
+      SettingsPage(),
+    ];
 
     final rail = NavigationRail(
       selectedIndex: _index,
@@ -84,7 +99,7 @@ class _AppShellState extends State<AppShell> {
             rail,
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(
-              child: IndexedStack(index: _index, children: _pages),
+              child: IndexedStack(index: _index, children: pages),
             ),
           ],
         ),
@@ -97,7 +112,7 @@ class _AppShellState extends State<AppShell> {
         children: [
           // Page content — full width.
           Positioned.fill(
-            child: IndexedStack(index: _index, children: _pages),
+            child: IndexedStack(index: _index, children: pages),
           ),
 
           // Dark scrim — fades in/out; IgnorePointer when transparent.
