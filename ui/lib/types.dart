@@ -69,6 +69,7 @@ class ActionDef {
   final String name;
   final String? description;
   final String icon;
+  final String? color;
   final List<String> platforms;
   final List<ActionInput> inputs;
   final List<ActionOutput> outputs;
@@ -79,6 +80,7 @@ class ActionDef {
     required this.name,
     this.description,
     required this.icon,
+    this.color,
     required this.platforms,
     required this.inputs,
     required this.outputs,
@@ -90,6 +92,7 @@ class ActionDef {
     name: j['name'],
     description: j['description'],
     icon: j['icon'],
+    color: j['color'],
     platforms: (j['platforms'] as List).cast<String>(),
     inputs: (j['inputs'] as List).map((e) => ActionInput.fromJson(e)).toList(),
     outputs: (j['outputs'] as List)
@@ -103,6 +106,7 @@ class ActionDef {
     'name': name,
     'description': description,
     'icon': icon,
+    'color': color,
     'platforms': platforms,
     'inputs': inputs.map((e) => e.toJson()).toList(),
     'outputs': outputs.map((e) => e.toJson()).toList(),
@@ -118,6 +122,7 @@ sealed class Step {
   final String? label;
   final bool enabled;
   final String? icon;
+  final String? color;
   final Map<String, dynamic> inputs;
 
   Step({
@@ -127,6 +132,7 @@ sealed class Step {
     this.label,
     this.enabled = true,
     this.icon,
+    this.color,
   });
 
   Map<String, dynamic> toJson();
@@ -167,6 +173,7 @@ class ActionStep extends Step {
   ActionStep({
     required super.id,
     required super.icon,
+    super.color,
     required super.inputs,
     super.label,
     super.enabled,
@@ -180,6 +187,7 @@ class ActionStep extends Step {
     actionId: j['action_id'],
     inputs: (j['inputs'] as Map?)?.cast<String, dynamic>() ?? {},
     icon: j['icon'],
+    color: j['color'],
   );
 
   @override
@@ -191,6 +199,7 @@ class ActionStep extends Step {
     'action_id': actionId,
     'inputs': inputs,
     'icon': icon,
+    'color': color,
   };
 }
 
@@ -201,6 +210,7 @@ class SetVarStep extends Step {
   SetVarStep({
     required super.id,
     super.icon,
+    super.color,
     super.label,
     super.enabled,
     required this.varName,
@@ -210,6 +220,7 @@ class SetVarStep extends Step {
   factory SetVarStep.fromJson(Map<String, dynamic> j) => SetVarStep(
     id: j['id'],
     icon: j['icon'] ?? 'data_object',
+    color: j['color'],
     label: j['label'],
     enabled: j['enabled'] ?? true,
     varName: j['var_name'],
@@ -244,6 +255,7 @@ class SetVarStep extends Step {
     'var_name': varName,
     'value': value,
     'icon': icon,
+    'color': color,
   };
 }
 
@@ -254,6 +266,8 @@ class RunShortcutStep extends Step {
 
   RunShortcutStep({
     required super.id,
+    super.icon,
+    super.color,
     super.label,
     super.enabled,
     required this.shortcutId,
@@ -263,6 +277,8 @@ class RunShortcutStep extends Step {
 
   factory RunShortcutStep.fromJson(Map<String, dynamic> j) => RunShortcutStep(
     id: j['id'],
+    icon: j['icon'],
+    color: j['color'],
     label: j['label'],
     enabled: j['enabled'] ?? true,
     shortcutId: j['shortcut_id'],
@@ -279,6 +295,8 @@ class RunShortcutStep extends Step {
     'shortcut_id': shortcutId,
     'inputs': inputs,
     'wait': wait,
+    'icon': icon,
+    'color': color,
   };
 }
 
@@ -290,6 +308,7 @@ class IfStep extends Step {
   IfStep({
     required super.id,
     required super.icon,
+    super.color,
     super.label,
     super.enabled,
     required this.condition,
@@ -300,6 +319,7 @@ class IfStep extends Step {
   factory IfStep.fromJson(Map<String, dynamic> j) => IfStep(
     id: j['id'],
     icon: "arrow_split",
+    color: j['color'],
     label: j['label'],
     enabled: j['enabled'] ?? true,
     condition: j['condition'],
@@ -316,6 +336,7 @@ class IfStep extends Step {
     'condition': condition,
     'then': then,
     'else': else_,
+    'color': color,
   };
 
   @override
@@ -340,6 +361,7 @@ class LoopStep extends Step {
   LoopStep({
     required super.id,
     required super.icon,
+    super.color,
     super.label,
     super.enabled,
     required this.over,
@@ -350,6 +372,7 @@ class LoopStep extends Step {
   factory LoopStep.fromJson(Map<String, dynamic> j) => LoopStep(
     id: j['id'],
     icon: "cycle",
+    color: j['color'],
     label: j['label'],
     enabled: j['enabled'] ?? true,
     over: j['over'],
@@ -366,6 +389,7 @@ class LoopStep extends Step {
     'over': over,
     'variable': variable,
     'steps': steps,
+    'color': color,
   };
 
   @override
@@ -395,6 +419,7 @@ class RepeatStep extends Step {
   RepeatStep({
     required super.id,
     required super.icon,
+    super.color,
     super.label,
     super.enabled,
     required this.times,
@@ -404,6 +429,7 @@ class RepeatStep extends Step {
   factory RepeatStep.fromJson(Map<String, dynamic> j) => RepeatStep(
     id: j['id'],
     icon: "rotate_right",
+    color: j['color'],
     label: j['label'],
     enabled: j['enabled'] ?? true,
     times: j['times'],
@@ -418,6 +444,7 @@ class RepeatStep extends Step {
     'enabled': enabled,
     'times': times,
     'steps': steps,
+    'color': color,
   };
 
   @override
@@ -440,6 +467,7 @@ class WaitStep extends Step {
   WaitStep({
     required super.id,
     required super.icon,
+    super.color,
     super.label,
     super.enabled,
     required this.duration,
@@ -448,6 +476,7 @@ class WaitStep extends Step {
   factory WaitStep.fromJson(Map<String, dynamic> j) => WaitStep(
     id: j['id'],
     icon: "timer",
+    color: j['color'],
     label: j['label'],
     enabled: j['enabled'] ?? true,
     duration: j['duration'],
@@ -460,6 +489,7 @@ class WaitStep extends Step {
     'label': label,
     'enabled': enabled,
     'duration': duration,
+    'color': color,
   };
 
   @override
@@ -482,6 +512,7 @@ class StopStep extends Step {
   StopStep({
     required super.id,
     required super.icon,
+    super.color,
     super.label,
     super.enabled,
     this.message,
@@ -490,6 +521,7 @@ class StopStep extends Step {
   factory StopStep.fromJson(Map<String, dynamic> j) => StopStep(
     id: j['id'],
     icon: "stop_circle",
+    color: j['color'],
     label: j['label'],
     enabled: j['enabled'] ?? true,
     message: j['message'],
@@ -502,6 +534,7 @@ class StopStep extends Step {
     'label': label,
     'enabled': enabled,
     'message': message,
+    'color': color,
   };
 
   @override
@@ -576,23 +609,53 @@ class Shortcut {
     Step step;
     switch (def.id) {
       case 'if':
-        step = IfStep(id: id, icon: def.icon, label: def.name, condition: '');
+        step = IfStep(
+          id: id,
+          icon: def.icon,
+          color: def.color,
+          label: def.name,
+          condition: '',
+        );
       case 'loop':
         step = LoopStep(
           id: id,
           icon: def.icon,
+          color: def.color,
           label: def.name,
           over: '',
           variable: 'item',
         );
       case 'repeat':
-        step = RepeatStep(id: id, icon: def.icon, label: def.name, times: 1);
+        step = RepeatStep(
+          id: id,
+          icon: def.icon,
+          color: def.color,
+          label: def.name,
+          times: 1,
+        );
       case 'wait':
-        step = WaitStep(id: id, icon: def.icon, label: def.name, duration: 0);
+        step = WaitStep(
+          id: id,
+          icon: def.icon,
+          color: def.color,
+          label: def.name,
+          duration: 0,
+        );
       case 'stop':
-        step = StopStep(id: id, icon: def.icon, label: def.name);
+        step = StopStep(
+          id: id,
+          icon: def.icon,
+          color: def.color,
+          label: def.name,
+        );
       case 'set_var':
-        step = SetVarStep(id: id, icon: def.icon, label: def.name, varName: '');
+        step = SetVarStep(
+          id: id,
+          icon: def.icon,
+          color: def.color,
+          label: def.name,
+          varName: '',
+        );
       default:
         steps.add(
           ActionStep(
@@ -602,6 +665,7 @@ class Shortcut {
             inputs: seed,
             label: def.name,
             icon: def.icon,
+            color: def.color,
           ),
         );
         return;
@@ -721,6 +785,7 @@ class ActionSummary {
   final String category;
   final String description;
   final String icon;
+  final String color;
   final List<String> platforms;
 
   ActionSummary({
@@ -729,6 +794,7 @@ class ActionSummary {
     required this.category,
     required this.description,
     required this.icon,
+    required this.color,
     required this.platforms,
   });
 }

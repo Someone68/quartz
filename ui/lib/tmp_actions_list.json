@@ -6,6 +6,7 @@
       "name": "Run Command",
       "description": "Run a shell command and capture its output.",
       "icon": "terminal",
+      "color": "cyan",
       "platforms": ["linux", "windows"],
       "inputs": [
         {

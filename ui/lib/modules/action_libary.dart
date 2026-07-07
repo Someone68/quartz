@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ui/color_map.dart';
+import 'package:ui/hue_scheme.dart';
 import 'package:ui/modules/misc.dart';
 import 'package:ui/types.dart';
 
@@ -72,7 +74,9 @@ class _ActionLibraryState extends State<ActionLibrary> {
                   return ListTile(
                     leading: buildStyledIcon(
                       context,
-                      Theme.of(context).colorScheme.primaryContainer,
+                      context
+                          .hue(getColor(filtered[index].color, context))
+                          .primaryContainer,
                       symbolFromName(filtered[index].icon),
                     ),
                     title: Text(

@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart' hide Step;
+import 'package:ui/color_map.dart';
+import 'package:ui/hue_scheme.dart';
 import 'package:ui/modules/action_libary.dart';
 import 'package:ui/modules/misc.dart';
 import 'package:ui/modules/resizable_container.dart';
@@ -68,9 +70,9 @@ class EditorPageState extends State<EditorPage> {
                         icon:
                             symbolFromName(e.value.icon) ??
                             Icons.warning_rounded,
-                        iconColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
+                        iconColor: context
+                            .hue(getColor(e.value.color ?? "cs-error", context))
+                            .primaryContainer,
                         isSelected: _selectedIndex == e.key,
                       ),
                     ),
@@ -157,6 +159,7 @@ List<ActionDef> getControlFlowDefs() => [
     name: 'If / Else',
     description: 'Branch on a condition.',
     icon: 'arrow_split',
+    color: 'cs-secondary',
     platforms: const ['linux', 'windows'],
     inputs: [
       ActionInput(
@@ -174,6 +177,7 @@ List<ActionDef> getControlFlowDefs() => [
     name: 'Loop',
     description: 'Iterate over a list, binding each item to a variable.',
     icon: 'cycle',
+    color: 'cs-secondary',
     platforms: const ['linux', 'windows'],
     inputs: [
       ActionInput(
@@ -198,6 +202,7 @@ List<ActionDef> getControlFlowDefs() => [
     name: 'Repeat',
     description: 'Run the body a fixed number of times.',
     icon: 'rotate_right',
+    color: 'cs-secondary',
     platforms: const ['linux', 'windows'],
     inputs: [
       ActionInput(
@@ -217,6 +222,7 @@ List<ActionDef> getControlFlowDefs() => [
     name: 'Set Variable',
     description: 'Assign a value to a variable.',
     icon: 'data_object',
+    color: 'cs-secondary',
     platforms: const ['linux', 'windows'],
     inputs: [
       ActionInput(
@@ -235,6 +241,7 @@ List<ActionDef> getControlFlowDefs() => [
     name: 'Wait',
     description: 'Pause before the next step.',
     icon: 'timer',
+    color: 'cs-secondary',
     platforms: const ['linux', 'windows'],
     inputs: [
       ActionInput(
@@ -254,6 +261,7 @@ List<ActionDef> getControlFlowDefs() => [
     name: 'Stop',
     description: 'Halt the shortcut.',
     icon: 'stop_circle',
+    color: 'cs-secondary',
     platforms: const ['linux', 'windows'],
     inputs: [ActionInput(name: 'message', type: 'string', label: 'Message')],
     outputs: const [],
@@ -274,6 +282,7 @@ List<ActionSummary> getActionSummaries() => getAllStepDefs()
         name: d.name,
         description: d.description ?? '',
         icon: d.icon,
+        color: d.color ?? 'cs-secondary',
         platforms: d.platforms,
         category: d.category,
       ),
@@ -359,11 +368,14 @@ class InspectorPanelState extends State<InspectorPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Inspector', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            def?.name ?? 'Inspector',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 16),
           if (def == null)
             Text(
-              'Select a step to edit its inputs.',
+              'Select a step to edit its properties.',
               style: Theme.of(context).textTheme.bodySmall,
             )
           else ...[

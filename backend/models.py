@@ -28,6 +28,7 @@ class ActionDef(BaseModel):
     name: str
     description: str | None = None
     icon: str
+    color: str | None = None
     platforms: list[str]
     inputs: list[ActionInput]
     outputs: list[ActionOutput]
@@ -41,6 +42,8 @@ class StepBase(BaseModel):
     type: str
     label: str | None = None
     enabled: bool = True
+    icon: str | None = None
+    color: str | None = None
 
     model_config = {"arbitrary_types_allowed": True}
 
