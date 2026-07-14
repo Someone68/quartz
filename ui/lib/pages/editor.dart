@@ -523,10 +523,23 @@ class InspectorPanelState extends State<InspectorPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            def?.name ?? 'Inspector',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          if (def != null) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(def.name, style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  widget.step?.id ?? "",
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(128),
+                  ),
+                ),
+              ],
+            ),
+          ] else
+            Text("Inspector", style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 16),
           if (def == null)
             Text(
@@ -580,15 +593,40 @@ class InspectorPanelState extends State<InspectorPanel> {
                           ),
                           Wrap(
                             spacing: 8.0,
+                            runSpacing: 8.0,
                             children: [
                               for (var output in widget.def!.outputs) ...[
                                 Tooltip(
-                                  message: "Copy code for ${output.name}",
-                                  child: TinyChipButton(
-                                    label: output.name,
+                                  decoration: BoxDecoration(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.primaryContainer,
+                                    ).colorScheme.surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(4.0),
+                                  ),
+                                  textStyle: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                  ),
+                                  message:
+                                      "\"${output.name}\" is of type \"${output.type}\".\nYou can reference this output using {{steps.${widget.step!.id}.${output.name}}} (click to copy)",
+                                  child: TinyChipButton(
+                                    label: output.name,
+                                    color: output.type == "string"
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.primaryContainer
+                                        : output.type == "number"
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.secondaryContainer
+                                        : output.type == "boolean"
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.tertiaryContainer
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainer,
                                     context: context,
                                     onTap: () {
                                       Clipboard.setData(
