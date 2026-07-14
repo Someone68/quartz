@@ -58,6 +58,7 @@ class SetVarStep(StepBase):
     type: Literal["set_var"] = "set_var"
     var_name: str
     value: Any
+    var_type: Literal["string", "number", "boolean", "list", "auto"] = "string"
 
 
 class RunShortcutStep(StepBase):

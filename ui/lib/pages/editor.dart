@@ -51,15 +51,40 @@ class EditorPageState extends State<EditorPage> {
         : _actionDefs[selected.type];
 
     void _save(BuildContext context) {
-      saveShortcut(widget.shortcut)
+      // Empty id = never persisted → create (POST). Otherwise update (PUT).
+      final isNew = widget.shortcut.id.isEmpty;
+      final request = isNew
+          ? saveShortcut(widget.shortcut)
+          : updateShortcut(widget.shortcut);
+      request
           .then((saved) {
             // Adopt the server-minted id so subsequent saves update in place.
             setState(() => widget.shortcut.id = saved.id);
             print('saved successfully: ${saved.id}');
+            showSnackBar(context, 'Saved successfully');
           })
           .catchError((e) {
             print('save failed: $e');
           });
+    }
+
+    void _editName() {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Edit Shortcut Name'),
+          content: TextField(
+            controller: TextEditingController(text: widget.shortcut.name),
+            onChanged: (value) => setState(() => widget.shortcut.name = value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
 
     return Scaffold(
@@ -130,13 +155,30 @@ class EditorPageState extends State<EditorPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Text(
-                              widget.shortcut.name,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                              textAlign: TextAlign.left,
+                            Row(
+                              children: [
+                                Text(
+                                  widget.shortcut.name,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineMedium,
+                                  textAlign: TextAlign.left,
+                                ),
+                                SizedBox(width: 4),
+                                IconButton(
+                                  icon: Icon(Icons.edit),
+                                  onPressed: _editName,
+                                  iconSize: 16,
+                                  padding: EdgeInsets.all(4),
+                                  constraints: BoxConstraints(),
+                                ),
+                              ],
                             ),
+
                             Text(
-                              widget.shortcut.id,
+                              widget.shortcut.id.isEmpty
+                                  ? 'New Shortcut'
+                                  : ' ${widget.shortcut.id}',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: Theme.of(
@@ -169,6 +211,21 @@ class EditorPageState extends State<EditorPage> {
                             ),
                           ),
                           child: const Text('Save'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () =>
+                              runShortcutWithLog(context, widget.shortcut.id),
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all(
+                              Theme.of(context).colorScheme.secondaryContainer,
+                            ),
+                            foregroundColor: WidgetStateProperty.all(
+                              Theme.of(
+                                context,
+                              ).colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                          child: const Text('Run'),
                         ),
                       ],
                     ),
@@ -218,12 +275,16 @@ class EditorPageState extends State<EditorPage> {
   }
 }
 
-// Full action definitions from tmp_actions_list.json (includes input/output
-// schema).
+// Full action definitions from the backend-written cache at
+// ~/.config/quartz/actions_cache.json (includes input/output schema).
 List<ActionDef> getActionDefs() {
+  final home =
+      Platform.environment['HOME'] ??
+      Platform.environment['USERPROFILE'] ??
+      '~';
+  final cachePath = '$home/.config/quartz/actions_cache.json';
   final actionsMap =
-      jsonDecode(File('lib/tmp_actions_list.json').readAsStringSync())
-          as Map<String, dynamic>;
+      jsonDecode(File(cachePath).readAsStringSync()) as Map<String, dynamic>;
 
   return actionsMap.entries
       .expand<ActionDef>(
@@ -316,6 +377,14 @@ List<ActionDef> getControlFlowDefs() => [
         type: 'string',
         label: 'Name',
         required: true,
+      ),
+      ActionInput(
+        name: 'var_type',
+        type: 'choice',
+        label: 'Type',
+        required: true,
+        default_: 'string',
+        options: const ['string', 'number', 'boolean', 'list', 'auto'],
       ),
       ActionInput(name: 'value', type: 'template', label: 'Value'),
     ],
@@ -472,19 +541,83 @@ class InspectorPanelState extends State<InspectorPanel> {
                 ],
               ),
             ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: ElevatedButton.icon(
-                label: const Text("Delete"),
-                icon: const Icon(Icons.delete),
-                onPressed: widget.onDelete,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                  foregroundColor: Theme.of(
-                    context,
-                  ).colorScheme.onErrorContainer,
+            Column(
+              children: [
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: widget.onDelete,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.errorContainer,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onErrorContainer,
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(height: 16.0),
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: EdgeInsets.all(16.0),
+                    width: double.infinity,
+                    child: Column(
+                      spacing: 8.0,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (widget.def?.outputs.isNotEmpty ?? false) ...[
+                          Text(
+                            "Outputs",
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.left,
+                          ),
+                          Wrap(
+                            spacing: 8.0,
+                            children: [
+                              for (var output in widget.def!.outputs) ...[
+                                Tooltip(
+                                  message: "Copy code for ${output.name}",
+                                  child: TinyChipButton(
+                                    label: output.name,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer,
+                                    context: context,
+                                    onTap: () {
+                                      Clipboard.setData(
+                                        ClipboardData(
+                                          text:
+                                              "{{steps.${widget.step!.id}.${output.name}}}",
+                                        ),
+                                      );
+                                      showSnackBar(
+                                        context,
+                                        "Copied to clipboard",
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ] else
+                          Text(
+                            "No outputs",
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.left,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -500,7 +633,7 @@ class InspectorPanelState extends State<InspectorPanel> {
     Widget field;
     switch (input.type) {
       case 'boolean':
-        field = Switch(value: value == true, onChanged: set);
+        field = Checkbox(value: value == true, onChanged: set);
         break;
       case 'choice':
         field = DropdownButton<String>(
@@ -520,6 +653,7 @@ class InspectorPanelState extends State<InspectorPanel> {
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(isDense: true),
           onChanged: (v) => set(num.tryParse(v)),
+          maxLines: null,
         );
         break;
       default: // string, path, template, and anything unknown
@@ -527,22 +661,56 @@ class InspectorPanelState extends State<InspectorPanel> {
           initialValue: value?.toString() ?? '',
           decoration: const InputDecoration(isDense: true),
           onChanged: set,
+          maxLines: null,
         );
     }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            input.required ? '${input.label} *' : input.label,
-            style: Theme.of(context).textTheme.labelMedium,
-          ),
-          const SizedBox(height: 4),
-          field,
-        ],
-      ),
+      child: input.type != 'boolean'
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      input.label,
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                    Text(
+                      input.required ? ' *' : '',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                field,
+              ],
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      input.label,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      input.required ? ' *' : '',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                field,
+              ],
+            ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 
+import storage
 from models import ActionDef
 
 _registry: dict[str, ActionDef] = {}
@@ -21,6 +22,19 @@ def load_all():
                 print(f"  registered action: {action.id}")
         except Exception as e:
             print(f"  failed to load action {path}: {e}")
+    _write_cache()
+
+
+def _write_cache():
+    """Persist action defs to the UI cache. Called on every (re)load."""
+    try:
+        data = {
+            cat: [a.model_dump(mode="json") for a in defs]
+            for cat, defs in all_actions_by_category().items()
+        }
+        storage.save_actions_cache(data)
+    except Exception as e:
+        print(f"  failed to write actions cache: {e}")
 
 
 def get(action_id: str) -> ActionDef:

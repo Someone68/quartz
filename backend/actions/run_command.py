@@ -6,6 +6,7 @@ from models import ActionDef, ActionInput, ActionOutput
 def _run(inputs: dict, context: dict) -> dict:
     command = inputs["command"]
     timeout = inputs.get("timeout", 30)
+    willabort = inputs.get("willabort", True)
 
     result = subprocess.run(
         command,
@@ -14,6 +15,13 @@ def _run(inputs: dict, context: dict) -> dict:
         text=True,
         timeout=float(timeout),
     )
+
+    if willabort and result.returncode != 0:
+        stderr = result.stderr.strip()
+        raise RuntimeError(
+            f"Command failed (exit {result.returncode}): {command}"
+            + (f"\n{stderr}" if stderr else "")
+        )
 
     return {
         "stdout": result.stdout.strip(),
@@ -28,6 +36,7 @@ ACTION = ActionDef(
     name="Run Command",
     description="Run a shell command and capture its output.",
     icon="terminal",
+    color="cyan",
     platforms=["linux", "windows"],
     inputs=[
         ActionInput(name="command", type="string", label="Command", required=True),
@@ -39,6 +48,13 @@ ACTION = ActionDef(
             default=30,
             min=1,
             max=300,
+        ),
+        ActionInput(
+            name="willabort",
+            type="boolean",
+            label="Abort on error",
+            required=True,
+            default=True,
         ),
     ],
     outputs=[

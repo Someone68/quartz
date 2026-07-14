@@ -42,8 +42,11 @@ class _HomePageState extends State<HomePage> {
           runSpacing: 16.0,
           children: [
             ...widget.shortcutSummaries.map(
-              (summary) =>
-                  ShortcutCard(shortcutSummary: summary, onEdit: widget.onEdit),
+              (summary) => ShortcutCard(
+                shortcutSummary: summary,
+                onEdit: widget.onEdit,
+                onChanged: _loadShortcuts,
+              ),
             ),
           ],
         ),

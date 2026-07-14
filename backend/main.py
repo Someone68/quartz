@@ -6,6 +6,11 @@ import storage
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models import Shortcut
+from pydantic import BaseModel
+
+
+class RenameRequest(BaseModel):
+    name: str
 
 
 @asynccontextmanager
@@ -55,10 +60,19 @@ def update_shortcut(shortcut_id: str, shortcut: Shortcut):
     return shortcut
 
 
-@app.delete("/shortcuts/{shortcut_id}")
+@app.patch("/shortcuts/{shortcut_id}/rename")
+def rename_shortcut(shortcut_id: str, body: RenameRequest):
+    shortcut = storage.load_shortcut(shortcut_id)
+    if not shortcut:
+        raise HTTPException(status_code=404, detail="Shortcut not found")
+    shortcut.name = body.name
+    storage.save_shortcut(shortcut)
+    return shortcut
+
+
+@app.delete("/shortcuts/{shortcut_id}", status_code=204)
 def delete_shortcut(shortcut_id: str):
     storage.delete_shortcut(shortcut_id)
-    return {"message": "Shortcut deleted"}
 
 
 @app.post("/shortcuts/{shortcut_id}/run")

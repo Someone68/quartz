@@ -17,6 +17,39 @@ Future<Shortcut> saveShortcut(Shortcut shortcut) async {
   return Shortcut.fromJson(jsonDecode(res.body));
 }
 
+Future<List<ActionDef>> getActions() async {
+  final res = await http.get(Uri.parse('http://localhost:8757/actions'));
+  if (res.statusCode != 200) {
+    throw Exception('Get failed: ${res.statusCode} ${res.body}');
+  }
+  return (jsonDecode(res.body) as List)
+      .map((s) => ActionDef.fromJson(s))
+      .toList();
+}
+
+Future<Shortcut> updateShortcut(Shortcut shortcut) async {
+  final res = await http.put(
+    Uri.parse('http://localhost:8757/shortcuts/${shortcut.id}'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode(shortcut),
+  );
+  if (res.statusCode != 200) {
+    throw Exception('Update failed: ${res.statusCode} ${res.body}');
+  }
+  return Shortcut.fromJson(jsonDecode(res.body));
+}
+
+Future<RunLog> runShortcut(String id) async {
+  final res = await http.post(
+    Uri.parse('http://localhost:8757/shortcuts/$id/run'),
+    headers: {'Content-Type': 'application/json'},
+  );
+  if (res.statusCode < 200 || res.statusCode >= 300) {
+    throw Exception('Run failed: ${res.statusCode} ${res.body}');
+  }
+  return RunLog.fromJson(jsonDecode(res.body));
+}
+
 Future<List<ShortcutSummary>> getShortcuts() async {
   final res = await http.get(Uri.parse('http://localhost:8757/shortcuts'));
   if (res.statusCode != 200) {
@@ -31,6 +64,18 @@ Future<Shortcut> getShortcut(String id) async {
   final res = await http.get(Uri.parse('http://localhost:8757/shortcuts/$id'));
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
+  }
+  return Shortcut.fromJson(jsonDecode(res.body));
+}
+
+Future<Shortcut> renameShortcut(String id, String name) async {
+  final res = await http.patch(
+    Uri.parse('http://localhost:8757/shortcuts/$id/rename'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'name': name}),
+  );
+  if (res.statusCode != 200) {
+    throw Exception('Rename failed: ${res.statusCode} ${res.body}');
   }
   return Shortcut.fromJson(jsonDecode(res.body));
 }

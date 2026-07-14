@@ -141,6 +141,8 @@ sealed class Step {
   // that carry one (e.g. ActionStep) override this.
   String? get description => null;
 
+  List<String>? get outputs => null;
+
   // Schema-driven config access for the inspector. Default backs onto the
   // generic `inputs` map (ActionStep). Typed steps (if/loop/...) override to
   // route named schema fields to/from their typed config fields.
@@ -215,6 +217,7 @@ class ActionStep extends Step {
 class SetVarStep extends Step {
   String varName;
   dynamic value;
+  String varType;
 
   SetVarStep({
     required super.id,
@@ -224,6 +227,7 @@ class SetVarStep extends Step {
     super.enabled,
     required this.varName,
     this.value,
+    this.varType = 'string',
   }) : super(type: 'set_var');
 
   factory SetVarStep.fromJson(Map<String, dynamic> j) => SetVarStep(
@@ -234,12 +238,14 @@ class SetVarStep extends Step {
     enabled: j['enabled'] ?? true,
     varName: j['var_name'],
     value: j['value'],
+    varType: j['var_type'] ?? 'string',
   );
 
   @override
   dynamic getField(String name) => switch (name) {
     'var_name' => varName,
     'value' => value,
+    'var_type' => varType,
     _ => super.getField(name),
   };
 
@@ -250,6 +256,8 @@ class SetVarStep extends Step {
         varName = v?.toString() ?? '';
       case 'value':
         value = v;
+      case 'var_type':
+        varType = v?.toString() ?? 'string';
       default:
         super.setField(name, v);
     }
@@ -263,6 +271,7 @@ class SetVarStep extends Step {
     'enabled': enabled,
     'var_name': varName,
     'value': value,
+    'var_type': varType,
     'icon': icon,
     'color': color,
   };
@@ -580,14 +589,14 @@ class Trigger {
 
 class Shortcut {
   String id;
-  final String name;
-  final String description;
-  final String icon;
-  final bool enabled;
-  final Trigger trigger;
-  final List<Step> steps;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  String name;
+  String description;
+  String icon;
+  bool enabled;
+  Trigger trigger;
+  List<Step> steps;
+  DateTime createdAt;
+  DateTime updatedAt;
 
   Shortcut({
     String? id,
@@ -596,10 +605,11 @@ class Shortcut {
     this.icon = 'star',
     this.enabled = true,
     required this.trigger,
-    this.steps = const [],
+    List<Step>? steps,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : id = id ?? newId(),
+       steps = List.of(steps ?? const []),
        createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 

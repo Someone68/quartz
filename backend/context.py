@@ -1,71 +1,16 @@
+import ast
 import os
 import platform
 from typing import Any
 
-from jinja2 import Environment, Undefined
+from jinja2 import Undefined
+from jinja2.nativetypes import NativeEnvironment
 from simpleeval import simple_eval
 
-_MISSING = object()
-
-
-def _lookup(path: str, context: dict) -> Any:
-    """Resolve a dotted path against the context, falling back to a bare name
-    in `variables`. Returns _MISSING if not found."""
-    parts = path.split(".")
-    # bare single name -> variables[name]
-    if len(parts) == 1 and parts[0] not in context and parts[0] in context.get(
-        "variables", {}
-    ):
-        return context["variables"][parts[0]]
-    cur: Any = context
-    for p in parts:
-        if isinstance(cur, dict) and p in cur:
-            cur = cur[p]
-        else:
-            return _MISSING
-    return cur
-
-
-def format_string(template: str, context: dict) -> str:
-    """Substitute `{name}` placeholders with values from the context.
-
-    - `{name}` is replaced by the resolved value (dotted paths allowed, e.g.
-      `{steps.s1.output}`; a bare name falls back to `variables[name]`).
-    - `\\{name}` is emitted literally as `{name}`; the backslash is consumed and
-      no substitution happens.
-    - An unknown key is left untouched (`{name}` stays) so it is visible.
-
-    Always returns a string.
-    """
-    out: list[str] = []
-    i = 0
-    n = len(template)
-    while i < n:
-        ch = template[i]
-        if ch == "\\" and i + 1 < n and template[i + 1] == "{":
-            # escaped brace: emit literal '{', skip the backslash
-            out.append("{")
-            i += 2
-            continue
-        if ch == "{":
-            end = template.find("}", i + 1)
-            if end == -1:
-                # no closing brace: emit rest verbatim
-                out.append(template[i:])
-                break
-            key = template[i + 1 : end].strip()
-            val = _lookup(key, context)
-            if val is _MISSING:
-                out.append(template[i : end + 1])  # leave `{key}` as-is
-            else:
-                out.append(str(val))
-            i = end + 1
-            continue
-        out.append(ch)
-        i += 1
-    return "".join(out)
-
-_jinja = Environment(undefined=Undefined)
+# NativeEnvironment keeps Python types: a value that is a single "{{ expr }}"
+# resolves to the real object (int/bool/list/dict), not its str repr. Mixed
+# text like "count is {{ x }}" still renders to a str.
+_jinja = NativeEnvironment(undefined=Undefined)
 
 
 def build_context(trigger_meta: dict) -> dict:
@@ -91,10 +36,71 @@ def resolve(value: Any, context: dict) -> Any:
         return value
 
 
+def coerce(value: Any, var_type: str) -> Any:
+    """Cast a resolved value to a declared variable type so it can be
+    manipulated downstream (arithmetic, iteration, boolean logic)."""
+    if var_type == "auto":
+        return _infer(value)
+    if var_type == "string":
+        return value if isinstance(value, str) else _to_str(value)
+    if var_type == "number":
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, (int, float)):
+            return value
+        s = str(value).strip()
+        f = float(s)
+        return int(f) if f.is_integer() and "." not in s and "e" not in s.lower() else f
+    if var_type == "boolean":
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return bool(value)
+        return str(value).strip().lower() in ("true", "1", "yes", "on")
+    if var_type == "list":
+        if isinstance(value, list):
+            return value
+        if isinstance(value, (tuple, set)):
+            return list(value)
+        return _infer_list(value)
+    raise ValueError(f"Unknown variable type: {var_type}")
+
+
+def _to_str(value: Any) -> str:
+    return "" if value is None else str(value)
+
+
+def _infer(value: Any) -> Any:
+    """Best-effort native type from a string; non-strings pass through."""
+    if not isinstance(value, str):
+        return value
+    s = value.strip()
+    try:
+        return ast.literal_eval(s)
+    except (ValueError, SyntaxError):
+        return value
+
+
+def _infer_list(value: Any) -> list:
+    parsed = _infer(value)
+    if isinstance(parsed, list):
+        return parsed
+    if isinstance(parsed, (tuple, set)):
+        return list(parsed)
+    # fall back to comma-separated split
+    s = str(value).strip()
+    if not s:
+        return []
+    return [p.strip() for p in s.split(",")]
+
+
 # this too
 def evaluate_condition(expr: str, context: dict) -> bool:
     """Evaluate a condition string safely. Supports basic comparisons and 'contains'."""
     resolved = resolve(expr, context)
+    if not isinstance(resolved, str):
+        # pure "{{ ... }}" already resolved to a native value; use its truthiness
+        return bool(resolved)
     # preprocess "contains" keyword
     resolved = resolved.replace(" contains ", " in ")
     try:

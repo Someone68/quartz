@@ -1,11 +1,10 @@
 import threading
 import time
 from datetime import datetime
-from locale import format_string
 
 import registry
 import storage
-from context import build_context, evaluate_condition, resolve
+from context import build_context, coerce, evaluate_condition, resolve
 from models import (
     ActionStep,
     IfStep,
@@ -19,6 +18,7 @@ from models import (
     StopStep,
     WaitStep,
 )
+from simpleeval import simple_eval
 
 
 class ShortcutStopped(Exception):
@@ -71,18 +71,31 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
         case ActionStep():
             action = registry.get(step.action_id)
             resolved_inputs = {k: resolve(v, context) for k, v in step.inputs.items()}
-            result = action.run(resolved_inputs, context)
+            try:
+                result = action.run(resolved_inputs, context)
+            except ShortcutStopped:
+                raise
+            except Exception as e:
+                name = step.label or step.action_id
+                raise RuntimeError(f"Step '{name} ({step.id})' failed: {e}") from e
             context["steps"][step.id] = result or {}
 
         case SetVarStep():
-            context["variables"][step.var_name] = resolve(step.value, context)
+            resolved = resolve(step.value, context)
+            try:
+                context["variables"][step.var_name] = coerce(
+                    simple_eval(resolved), step.var_type
+                )
+            except (ValueError, TypeError) as e:
+                raise ValueError(
+                    f"Cannot set '{step.var_name}' as {step.var_type}: {resolved!r} ({e})"
+                )
 
         case RunShortcutStep():
-            nested = storage.load_shortcut(format_string(step.shortcut_id, context))
+            shortcut_id = resolve(step.shortcut_id, context)
+            nested = storage.load_shortcut(shortcut_id)
             if not nested:
-                raise ValueError(
-                    f"Shortcut not found: {format_string(step.shortcut_id, context)}"
-                )
+                raise ValueError(f"Shortcut not found: {shortcut_id}")
             resolved_inputs = {k: resolve(v, context) for k, v in step.inputs.items()}
             nested_trigger_meta = {
                 "type": "nested",
@@ -105,9 +118,7 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
 
         case IfStep():
             branch = (
-                step.then
-                if evaluate_condition(format_string(step.condition, context), context)
-                else step.else_
+                step.then if evaluate_condition(step.condition, context) else step.else_
             )
             _run_steps(branch, context, steps_by_id)
 

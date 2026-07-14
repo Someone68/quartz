@@ -9,6 +9,7 @@ from pydantic.type_adapter import TypeAdapter
 CONFIG_DIR = Path("~/.config/quartz").expanduser()
 SHORTCUTS_DIR = CONFIG_DIR / "shortcuts"
 RUNS_DIR = CONFIG_DIR / "runs"
+ACTIONS_CACHE = CONFIG_DIR / "actions_cache.json"
 
 StepAdapter = TypeAdapter(Step)
 
@@ -85,3 +86,10 @@ def load_run(shortcut_id: str, run_id: str) -> RunLog | None:
     if not path.exists():
         return None
     return RunLog.model_validate_json(path.read_text())
+
+
+def save_actions_cache(actions_by_category: dict) -> None:
+    """Write the action defs (grouped by category) to a cache file the UI
+    reads on startup, so it does not depend on a running backend."""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    ACTIONS_CACHE.write_text(json.dumps(actions_by_category, indent=2))

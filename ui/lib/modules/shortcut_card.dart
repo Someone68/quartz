@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ui/modules/misc.dart';
 import 'package:ui/requests.dart';
 import 'package:ui/types.dart';
 
@@ -110,10 +111,15 @@ class _EditButtonState extends State<_EditButton> {
 class ShortcutCard extends StatefulWidget {
   final ShortcutSummary shortcutSummary;
   final void Function(Shortcut) onEdit;
+
+  /// Called after a rename/delete so the dashboard can reload the list.
+  final VoidCallback onChanged;
+
   const ShortcutCard({
     super.key,
     required this.shortcutSummary,
     required this.onEdit,
+    required this.onChanged,
   });
 
   @override
@@ -123,6 +129,70 @@ class ShortcutCard extends StatefulWidget {
 class _ShortcutCardState extends State<ShortcutCard> {
   final _hoverCardKey = GlobalKey<_HoverCardState>();
 
+  Future<void> _promptRename() async {
+    final controller = TextEditingController(text: widget.shortcutSummary.name);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Shortcut'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Name'),
+          onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+    if (newName == null || newName.isEmpty) return;
+    try {
+      await renameShortcut(widget.shortcutSummary.id, newName);
+      widget.onChanged();
+    } catch (e) {
+      if (mounted) _showError('Rename failed: $e');
+    }
+  }
+
+  Future<void> _promptDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Shortcut'),
+        content: Text('Delete "${widget.shortcutSummary.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await deleteShortcut(widget.shortcutSummary.id);
+      widget.onChanged();
+    } catch (e) {
+      if (mounted) _showError('Delete failed: $e');
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -130,7 +200,7 @@ class _ShortcutCardState extends State<ShortcutCard> {
       height: 160.0,
       child: _HoverCard(
         key: _hoverCardKey,
-        onTap: () {},
+        onTap: () => runShortcutWithLog(context, widget.shortcutSummary.id),
         child: Stack(
           children: [
             Padding(
@@ -153,6 +223,29 @@ class _ShortcutCardState extends State<ShortcutCard> {
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'Options',
+                  onOpened: () =>
+                      _hoverCardKey.currentState?.setSuppressed(true),
+                  onCanceled: () =>
+                      _hoverCardKey.currentState?.setSuppressed(false),
+                  onSelected: (value) {
+                    _hoverCardKey.currentState?.setSuppressed(false);
+                    if (value == 'rename') _promptRename();
+                    if (value == 'delete') _promptDelete();
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'rename', child: Text('Rename')),
+                    PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  ],
+                ),
               ),
             ),
             Align(
