@@ -28,7 +28,16 @@ class ShortcutStopped(Exception):
 def run_shortcut(shortcut: Shortcut, trigger_meta: dict = {}) -> RunLog:
     context = build_context(trigger_meta)
     steps_by_id = shortcut.steps_by_id()
-    top_level_ids = [s.id for s in shortcut.steps]
+    # Every step lives in the flat list; containers reference their children by
+    # id. Top-level = steps no container owns, else a branch/body child would
+    # also run here at the root.
+    child_ids: set[str] = set()
+    for s in shortcut.steps:
+        if isinstance(s, IfStep):
+            child_ids.update(s.then, s.else_)
+        elif isinstance(s, (LoopStep, RepeatStep)):
+            child_ids.update(s.steps)
+    top_level_ids = [s.id for s in shortcut.steps if s.id not in child_ids]
 
     run = RunLog(
         shortcut_id=shortcut.id,
@@ -118,7 +127,9 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
 
         case IfStep():
             branch = (
-                step.then if evaluate_condition(step.condition, context) else step.else_
+                step.then
+                if evaluate_condition((step.condition), context)
+                else step.else_
             )
             _run_steps(branch, context, steps_by_id)
 

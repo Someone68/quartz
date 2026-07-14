@@ -33,15 +33,15 @@ class EditorPageState extends State<EditorPage> {
     for (final def in getAllStepDefs()) def.id: def,
   };
 
-  /// Index of the step currently shown in the inspector.
-  int? _selectedIndex;
+  /// Id of the step currently shown in the inspector. Id (not list index)
+  /// because steps now nest inside If branches — a flat index no longer
+  /// identifies a step across the tree.
+  String? _selectedId;
 
   @override
   Widget build(BuildContext context) {
-    final steps = widget.shortcut.steps;
-    final selected = (_selectedIndex != null && _selectedIndex! < steps.length)
-        ? steps[_selectedIndex!]
-        : null;
+    final byId = widget.shortcut.stepsById();
+    final selected = _selectedId == null ? null : byId[_selectedId];
     // Actions key by action id; control-flow steps key by their type ('if',
     // 'wait', ...), which matches the def id used in the palette.
     final selectedDef = selected == null
@@ -97,53 +97,29 @@ class EditorPageState extends State<EditorPage> {
               child: Column(
                 spacing: 16.0,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                    child: Column(
-                      spacing: 16.0,
-                      children: [
-                        ...steps.asMap().entries.map(
-                          (e) => GestureDetector(
-                            onTap: () => setState(() => _selectedIndex = e.key),
-                            child: StepCard(
-                              label: e.value.label ?? "error",
-                              icon:
-                                  symbolFromName(e.value.icon) ??
-                                  Icons.warning_rounded,
-                              iconColor: context
-                                  .hue(
-                                    getColor(
-                                      e.value.color ?? "cs-error",
-                                      context,
-                                    ),
-                                  )
-                                  .primaryContainer,
-                              isSelected: _selectedIndex == e.key,
-                              description: e.value.description,
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                        child: Column(
+                          spacing: 16.0,
+                          children: [
+                            ..._renderIds(context, byId, _topLevelIds(), 0),
+                            // Top-level add button — no branch, so the new step
+                            // lands at the root of the flow.
+                            _addActionButton(context, 0, null),
+                            FloatingActionButton.extended(
+                              label: Text("debug: print shortcut"),
+                              onPressed: () {
+                                printObject(widget.shortcut);
+                              },
                             ),
-                          ),
+                          ],
                         ),
-                        AddActionButton(
-                          onActionSelected: (action) {
-                            final def = _actionDefs[action.id];
-                            if (def == null) return;
-                            setState(() {
-                              widget.shortcut.addStep(def: def);
-                              _selectedIndex = widget.shortcut.steps.length - 1;
-                            });
-                          },
-                        ),
-                        FloatingActionButton.extended(
-                          label: Text("debug: print shortcut"),
-                          onPressed: () {
-                            printObject(widget.shortcut);
-                          },
-                        ),
-                      ],
+                      ),
                     ),
                   ),
 
-                  Spacer(),
                   BottomAppBar(
                     color: Theme.of(context).colorScheme.surfaceContainer,
                     child: Row(
@@ -258,10 +234,8 @@ class EditorPageState extends State<EditorPage> {
                       onDelete: selected == null
                           ? null
                           : () => setState(() {
-                              widget.shortcut.steps.removeWhere(
-                                (s) => s.id == selected.id,
-                              );
-                              _selectedIndex = null;
+                              _deleteStep(selected.id);
+                              _selectedId = null;
                             }),
                     ),
                   ),
@@ -272,6 +246,176 @@ class EditorPageState extends State<EditorPage> {
         ],
       ),
     );
+  }
+
+  /// Ids of steps that no container references as a child — i.e. the root of
+  /// the flow. Order follows the flat `steps` list.
+  List<String> _topLevelIds() {
+    final steps = widget.shortcut.steps;
+    final childIds = <String>{};
+    for (final s in steps) {
+      if (s is IfStep) {
+        childIds.addAll(s.then);
+        childIds.addAll(s.else_);
+      } else if (s is LoopStep) {
+        childIds.addAll(s.steps);
+      } else if (s is RepeatStep) {
+        childIds.addAll(s.steps);
+      }
+    }
+    return [
+      for (final s in steps)
+        if (!childIds.contains(s.id)) s.id,
+    ];
+  }
+
+  /// Render a list of step ids at nesting [depth]. If steps expand into their
+  /// THEN / ELSE branches (recursing one level deeper) capped by an "End If".
+  List<Widget> _renderIds(
+    BuildContext context,
+    Map<String, Step> byId,
+    List<String> ids,
+    int depth,
+  ) {
+    final widgets = <Widget>[];
+    for (final id in ids) {
+      final step = byId[id];
+      if (step == null) continue;
+      widgets.add(_stepCard(context, step, depth));
+      if (step is IfStep) {
+        final childDepth = depth + 1;
+        widgets
+          ..add(_branchHeader(context, 'THEN', childDepth))
+          ..addAll(_renderIds(context, byId, step.then, childDepth))
+          ..add(_addActionButton(context, childDepth, step.then))
+          ..add(_branchHeader(context, 'ELSE', childDepth))
+          ..addAll(_renderIds(context, byId, step.else_, childDepth))
+          ..add(_addActionButton(context, childDepth, step.else_))
+          ..add(_endIf(context, depth));
+      }
+    }
+    return widgets;
+  }
+
+  /// One indented step card. Indent = 8 logical units per enclosing If.
+  Widget _stepCard(BuildContext context, Step step, int depth) {
+    return Padding(
+      padding: EdgeInsets.only(left: depth * 8.0),
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedId = step.id),
+        child: StepCard(
+          label: step.label ?? "error",
+          icon: symbolFromName(step.icon) ?? Icons.warning_rounded,
+          iconColor: context
+              .hue(getColor(step.color ?? "cs-error", context))
+              .primaryContainer,
+          isSelected: _selectedId == step.id,
+          description: step.description,
+        ),
+      ),
+    );
+  }
+
+  /// Add button for a branch. [branch] is the container's child-id list (the
+  /// If's `then`/`else`); null adds at the top level.
+  Widget _addActionButton(
+    BuildContext context,
+    int depth,
+    List<String>? branch,
+  ) {
+    return Padding(
+      padding: EdgeInsets.only(left: depth * 8.0),
+      child: AddActionButton(
+        onActionSelected: (action) {
+          final def = _actionDefs[action.id];
+          if (def == null) return;
+          setState(() {
+            final step = widget.shortcut.addStep(def: def, branch: branch);
+            _selectedId = step.id;
+          });
+        },
+      ),
+    );
+  }
+
+  /// "THEN" / "ELSE" category label above a branch's steps.
+  Widget _branchHeader(BuildContext context, String text, int depth) {
+    return Padding(
+      padding: EdgeInsets.only(left: depth * 8.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.secondaryContainer,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.0,
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Closing marker at the If's own depth, bracketing the whole statement.
+  Widget _endIf(BuildContext context, int depth) {
+    return Padding(
+      padding: EdgeInsets.only(left: depth * 8.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            'End If',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Remove a step and, for containers, its whole subtree; then detach the
+  /// removed ids from any parent branch lists so nothing dangles.
+  void _deleteStep(String id) {
+    final byId = widget.shortcut.stepsById();
+    final toRemove = <String>{};
+    void collect(String sid) {
+      if (!toRemove.add(sid)) return;
+      final s = byId[sid];
+      if (s is IfStep) {
+        s.then.forEach(collect);
+        s.else_.forEach(collect);
+      } else if (s is LoopStep) {
+        s.steps.forEach(collect);
+      } else if (s is RepeatStep) {
+        s.steps.forEach(collect);
+      }
+    }
+
+    collect(id);
+    widget.shortcut.steps.removeWhere((s) => toRemove.contains(s.id));
+    for (final s in widget.shortcut.steps) {
+      if (s is IfStep) {
+        s.then.removeWhere(toRemove.contains);
+        s.else_.removeWhere(toRemove.contains);
+      } else if (s is LoopStep) {
+        s.steps.removeWhere(toRemove.contains);
+      } else if (s is RepeatStep) {
+        s.steps.removeWhere(toRemove.contains);
+      }
+    }
   }
 }
 

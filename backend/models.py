@@ -7,7 +7,9 @@ from pydantic import BaseModel, Field, field_validator
 
 class ActionInput(BaseModel):
     name: str
-    type: Literal["string", "number", "boolean", "path", "choice", "template"]
+    type: Literal[
+        "string", "number", "boolean", "path", "choice", "template", "dynamic"
+    ]
     label: str
     required: bool = False
     default: Any = None

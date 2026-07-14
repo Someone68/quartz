@@ -330,9 +330,11 @@ class IfStep extends Step {
     super.label,
     super.enabled,
     required this.condition,
-    this.then = const [],
-    this.else_ = const [],
-  }) : super(type: 'if');
+    List<String>? then,
+    List<String>? else_,
+  }) : then = List.of(then ?? const []),
+       else_ = List.of(else_ ?? const []),
+       super(type: 'if');
 
   factory IfStep.fromJson(Map<String, dynamic> j) => IfStep(
     id: j['id'],
@@ -615,12 +617,23 @@ class Shortcut {
 
   Map<String, Step> stepsById() => {for (final s in steps) s.id: s};
 
-  /// Append a step from a palette def. `def.id` matches a control-flow step
-  /// type ('if', 'loop', ...) or an action id; actions fall through to the
-  /// default and carry their config in the generic `inputs` map. Scalar config
-  /// for control steps is seeded from the def schema via `setField`.
-  void addStep({required ActionDef def}) {
-    final id = "s${steps.length}";
+  /// First unused `sN` id. Scanning avoids collisions after deletes (a plain
+  /// `steps.length` counter would reuse an id that a later step still holds).
+  String _freshStepId() {
+    final existing = {for (final s in steps) s.id};
+    var i = 0;
+    while (existing.contains('s$i')) {
+      i++;
+    }
+    return 's$i';
+  }
+
+  /// Construct (but do not insert) a step from a palette def. `def.id` matches a
+  /// control-flow step type ('if', 'loop', ...) or an action id; actions fall
+  /// through to the default and carry their config in the generic `inputs` map.
+  /// Scalar config for control steps is seeded from the def schema via
+  /// `setField`.
+  Step _buildStep({required ActionDef def, required String id}) {
     final seed = <String, dynamic>{
       for (final input in def.inputs) input.name: input.default_,
     };
@@ -676,26 +689,35 @@ class Shortcut {
           varName: '',
         );
       default:
-        steps.add(
-          ActionStep(
-            actionId: def.id,
-            id: id,
-            enabled: true,
-            inputs: seed,
-            label: def.name,
-            icon: def.icon,
-            color: def.color,
-            description: def.description,
-          ),
+        return ActionStep(
+          actionId: def.id,
+          id: id,
+          enabled: true,
+          inputs: seed,
+          label: def.name,
+          icon: def.icon,
+          color: def.color,
+          description: def.description,
         );
-        return;
     }
 
     // Seed scalar config fields from the schema defaults.
     for (final input in def.inputs) {
       if (input.default_ != null) step.setField(input.name, input.default_);
     }
+    return step;
+  }
+
+  /// Append a step from a palette def. Every step lives in the flat `steps`
+  /// list; a container's children are referenced by id. When [branch] is given
+  /// (an If's `then`/`else` list, or a loop/repeat body), the new step's id is
+  /// registered there so it renders and runs inside that container; otherwise
+  /// it becomes a top-level step. Returns the created step.
+  Step addStep({required ActionDef def, List<String>? branch}) {
+    final step = _buildStep(def: def, id: _freshStepId());
     steps.add(step);
+    branch?.add(step.id);
+    return step;
   }
 
   factory Shortcut.fromJson(Map<String, dynamic> j) => Shortcut(

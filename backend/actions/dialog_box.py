@@ -1,20 +1,20 @@
 import os
 import subprocess
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import simpledialog
 
 from models import ActionDef, ActionInput, ActionOutput
 
 
 def _run(inputs: dict, context: dict) -> dict:
-    title = str(inputs["title"]) or ""
-    body = str(inputs["body"]) or ""
+    title = inputs["title"]
+    prompt = inputs["prompt"]
     icon = inputs.get("icon", "info")
     backend = inputs.get("backend", "auto")
 
     de = str(os.environ.get("XDG_CURRENT_DESKTOP")).lower()
     if de == "kde" and backend == "auto" or backend == "kdialog (kde)":
-        subprocess.run(
+        result = subprocess.run(
             [
                 "kdialog",
                 "--title",
@@ -27,23 +27,20 @@ def _run(inputs: dict, context: dict) -> dict:
                 else "dialog-warning"
                 if icon == "warning"
                 else "dialog-question",
-                "--msgbox"
-                if icon == "info"
-                else "--error"
-                if icon == "error"
-                else "--sorry"
-                if icon == "warning"
-                else "--msgbox",
-                body,
-            ]
+                "--inputbox",
+                prompt,
+            ],
+            capture_output=True,
+            text=True,
         )
+        body = result.stdout.strip()
     elif de == "gnome" and backend == "auto" or backend == "zenity (gnome)":
-        subprocess.run(
+        result = subprocess.run(
             [
                 "zenity",
                 "--info",
                 "--text",
-                body,
+                prompt,
                 "--title",
                 title,
                 "--icon",
@@ -58,35 +55,38 @@ def _run(inputs: dict, context: dict) -> dict:
                     if inputs.get("height")
                     else []
                 ),
-            ]
+            ],
+            capture_output=True,
+            text=True,
         )
+        body = result.stdout.strip()
     else:
         root = tk.Tk()
         root.withdraw()
-        messagebox.showinfo(title, body, icon=icon)
+        body = simpledialog.askstring(title, prompt)
         root.destroy()
 
-    return {}
+    return {"response": body}
 
 
 ACTION = ActionDef(
-    id="output.msgbox",
-    category="Output",
-    name="Message Box",
-    description="Display a message box with a given title and body.",
-    icon="info",
-    color="pink",
+    id="input.msgbox",
+    category="Input",
+    name="Dialog Box",
+    description="Display a dialog box with a given title and prompt and accept input from the user.",
+    icon="chat_add_on",
+    color="green",
     platforms=["linux"],
     inputs=[
         ActionInput(name="title", type="string", label="Title", required=True),
-        ActionInput(name="body", type="string", label="Body", required=True),
+        ActionInput(name="prompt", type="string", label="Prompt", required=True),
         ActionInput(
             name="icon",
             type="choice",
             label="Icon",
             required=False,
             options=["info", "warning", "error", "question"],
-            default="info",
+            default="question",
         ),
         ActionInput(
             name="backend",
@@ -103,6 +103,8 @@ ACTION = ActionDef(
             name="height", type="number", label="Height (zenity)", required=False
         ),
     ],
-    outputs=[],
+    outputs=[
+        ActionOutput(name="response", type="string", label="Response"),
+    ],
     run=_run,
 )
