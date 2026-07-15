@@ -1,3 +1,4 @@
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +20,22 @@ class SettingsPage extends StatelessWidget {
             title: const Text('Dark mode'),
             value: theme.mode == ThemeMode.dark,
             onChanged: (_) => theme.toggle(),
+          ),
+          ListTile(
+            leading: const Icon(Icons.color_lens_outlined),
+            title: const Text('Theme color'),
+            trailing: ColorIndicator(color: theme.seed),
+          ),
+          ColorPicker(
+            color: theme.seed,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            enableShadesSelection: false,
+            pickersEnabled: const {
+              ColorPickerType.wheel: false,
+              ColorPickerType.primary: true,
+              ColorPickerType.accent: false,
+            },
+            onColorChanged: (c) => theme.setSeed(c),
           ),
         ],
       ),

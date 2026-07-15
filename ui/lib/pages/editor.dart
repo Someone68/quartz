@@ -18,8 +18,11 @@ import 'package:ui/types.dart';
 
 class EditorPage extends StatefulWidget {
   final Shortcut shortcut;
+  String? _draggingId;
+  List<String>? _hoverList;
+  int? _hoverIndex;
 
-  const EditorPage({super.key, required this.shortcut});
+  EditorPage({super.key, required this.shortcut});
 
   @override
   State<EditorPage> createState() => EditorPageState();
@@ -76,6 +79,7 @@ class EditorPageState extends State<EditorPage> {
           content: TextField(
             controller: TextEditingController(text: widget.shortcut.name),
             onChanged: (value) => setState(() => widget.shortcut.name = value),
+            maxLength: 25,
           ),
           actions: [
             TextButton(
@@ -291,7 +295,21 @@ class EditorPageState extends State<EditorPage> {
           ..add(_branchHeader(context, 'ELSE', childDepth))
           ..addAll(_renderIds(context, byId, step.else_, childDepth))
           ..add(_addActionButton(context, childDepth, step.else_))
-          ..add(_endIf(context, depth));
+          ..add(_endSection(context, depth, 'End If'));
+      } else if (step is LoopStep) {
+        final childDepth = depth + 1;
+        widgets
+          ..add(_branchHeader(context, 'LOOP', childDepth))
+          ..addAll(_renderIds(context, byId, step.steps, childDepth))
+          ..add(_addActionButton(context, childDepth, step.steps))
+          ..add(_endSection(context, depth, 'End Loop'));
+      } else if (step is RepeatStep) {
+        final childDepth = depth + 1;
+        widgets
+          ..add(_branchHeader(context, 'REPEAT', childDepth))
+          ..addAll(_renderIds(context, byId, step.steps, childDepth))
+          ..add(_addActionButton(context, childDepth, step.steps))
+          ..add(_endSection(context, depth, 'End Repeat'));
       }
     }
     return widgets;
@@ -300,7 +318,7 @@ class EditorPageState extends State<EditorPage> {
   /// One indented step card. Indent = 8 logical units per enclosing If.
   Widget _stepCard(BuildContext context, Step step, int depth) {
     return Padding(
-      padding: EdgeInsets.only(left: depth * 8.0),
+      padding: EdgeInsets.only(left: depth * 16.0),
       child: GestureDetector(
         onTap: () => setState(() => _selectedId = step.id),
         child: StepCard(
@@ -364,9 +382,9 @@ class EditorPageState extends State<EditorPage> {
   }
 
   /// Closing marker at the If's own depth, bracketing the whole statement.
-  Widget _endIf(BuildContext context, int depth) {
+  Widget _endSection(BuildContext context, int depth, String label) {
     return Padding(
-      padding: EdgeInsets.only(left: depth * 8.0),
+      padding: EdgeInsets.only(left: depth * 16.0),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Container(
@@ -376,7 +394,7 @@ class EditorPageState extends State<EditorPage> {
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
-            'End If',
+            label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
             ),
@@ -446,7 +464,7 @@ List<ActionDef> getActionDefs() {
 List<ActionDef> getControlFlowDefs() => [
   ActionDef(
     id: 'if',
-    category: 'Control Flow',
+    category: 'Scripting',
     name: 'If / Else',
     description: 'Branch on a condition.',
     icon: 'arrow_split',
@@ -464,7 +482,7 @@ List<ActionDef> getControlFlowDefs() => [
   ),
   ActionDef(
     id: 'loop',
-    category: 'Control Flow',
+    category: 'Scripting',
     name: 'Loop',
     description: 'Iterate over a list, binding each item to a variable.',
     icon: 'cycle',
@@ -489,7 +507,7 @@ List<ActionDef> getControlFlowDefs() => [
   ),
   ActionDef(
     id: 'repeat',
-    category: 'Control Flow',
+    category: 'Scripting',
     name: 'Repeat',
     description: 'Run the body a fixed number of times.',
     icon: 'rotate_right',
@@ -509,7 +527,7 @@ List<ActionDef> getControlFlowDefs() => [
   ),
   ActionDef(
     id: 'set_var',
-    category: 'Control Flow',
+    category: 'Scripting',
     name: 'Set Variable',
     description: 'Assign a value to a variable.',
     icon: 'data_object',
@@ -536,7 +554,7 @@ List<ActionDef> getControlFlowDefs() => [
   ),
   ActionDef(
     id: 'wait',
-    category: 'Control Flow',
+    category: 'Scripting',
     name: 'Wait',
     description: 'Pause before the next step.',
     icon: 'timer',
@@ -556,13 +574,21 @@ List<ActionDef> getControlFlowDefs() => [
   ),
   ActionDef(
     id: 'stop',
-    category: 'Control Flow',
+    category: 'Scripting',
     name: 'Stop',
     description: 'Halt the shortcut.',
     icon: 'stop_circle',
     color: 'cs-secondary',
     platforms: const ['linux', 'windows'],
-    inputs: [ActionInput(name: 'message', type: 'string', label: 'Message')],
+    inputs: [
+      ActionInput(name: 'message', type: 'string', label: 'Message'),
+      ActionInput(
+        name: 'throwError',
+        type: 'boolean',
+        label: 'Throw Error',
+        default_: false,
+      ),
+    ],
     outputs: const [],
   ),
 ];

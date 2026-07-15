@@ -140,6 +140,7 @@ class _ShortcutCardState extends State<ShortcutCard> {
           autofocus: true,
           decoration: const InputDecoration(labelText: 'Name'),
           onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
+          maxLength: 25,
         ),
         actions: [
           TextButton(

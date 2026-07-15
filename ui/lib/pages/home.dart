@@ -12,17 +12,17 @@ class HomePage extends StatefulWidget {
   /// Opens a shortcut in the editor tab (provided by the shell).
   final void Function(Shortcut) onEdit;
 
-  List<ShortcutSummary> shortcutSummaries = [];
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  List<ShortcutSummary> _shortcutSummaries = [];
+
   Future<void> _loadShortcuts() async {
     final summaries = await getShortcuts();
     if (!mounted) return;
-    setState(() => widget.shortcutSummaries = summaries);
+    setState(() => _shortcutSummaries = summaries);
   }
 
   @override
@@ -41,7 +41,7 @@ class _HomePageState extends State<HomePage> {
           spacing: 16.0,
           runSpacing: 16.0,
           children: [
-            ...widget.shortcutSummaries.map(
+            ..._shortcutSummaries.map(
               (summary) => ShortcutCard(
                 shortcutSummary: summary,
                 onEdit: widget.onEdit,

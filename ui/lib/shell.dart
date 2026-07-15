@@ -22,6 +22,10 @@ class _AppShellState extends State<AppShell> {
   int _index = 0;
   bool _navOpen = false;
 
+  /// Bumped whenever the Shortcuts tab is (re)selected, to force HomePage to
+  /// rebuild fresh and refetch — the IndexedStack keeps it alive otherwise.
+  int _homeEpoch = 0;
+
   /// Shortcut currently loaded in the editor tab. Null until the user opens
   /// one (edit button) or starts a new one (create button).
   Shortcut? _editorShortcut;
@@ -59,6 +63,8 @@ class _AppShellState extends State<AppShell> {
     setState(() {
       // Opening the editor tab with nothing loaded starts a new shortcut.
       if (i == _kEditorIndex) _editorShortcut ??= _blankShortcut();
+      // Landing back on Shortcuts refetches the list (may have changed in editor).
+      if (i == 0) _homeEpoch++;
       _index = i;
       _navOpen = false;
     });
@@ -70,7 +76,7 @@ class _AppShellState extends State<AppShell> {
 
     final editorShortcut = _editorShortcut ??= _blankShortcut();
     final pages = [
-      HomePage(onEdit: _openEditor),
+      HomePage(key: ValueKey(_homeEpoch), onEdit: _openEditor),
       // Key by id so loading a different shortcut rebuilds the editor fresh.
       EditorPage(key: ValueKey(editorShortcut.id), shortcut: editorShortcut),
       SettingsPage(),

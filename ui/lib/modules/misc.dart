@@ -178,7 +178,7 @@ class _TopNotificationState extends State<_TopNotification>
 void runShortcutWithLog(BuildContext context, String shortcutId) {
   runShortcut(shortcutId)
       .then((log) {
-        if (log.status != 'success') {
+        if (log.status != 'success' && log.status != 'stopped') {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(

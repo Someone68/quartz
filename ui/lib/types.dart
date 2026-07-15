@@ -376,7 +376,7 @@ class IfStep extends Step {
 class LoopStep extends Step {
   String over;
   String variable;
-  final List<String> steps;
+  List<String> steps;
 
   LoopStep({
     required super.id,
@@ -386,8 +386,9 @@ class LoopStep extends Step {
     super.enabled,
     required this.over,
     required this.variable,
-    this.steps = const [],
-  }) : super(type: 'loop');
+    List<String>? steps,
+  }) : steps = List.of(steps ?? const []),
+       super(type: 'loop');
 
   factory LoopStep.fromJson(Map<String, dynamic> j) => LoopStep(
     id: j['id'],
@@ -434,7 +435,7 @@ class LoopStep extends Step {
 
 class RepeatStep extends Step {
   int times;
-  final List<String> steps;
+  List<String> steps;
 
   RepeatStep({
     required super.id,
@@ -443,8 +444,9 @@ class RepeatStep extends Step {
     super.label,
     super.enabled,
     required this.times,
-    this.steps = const [],
-  }) : super(type: 'repeat');
+    List<String>? steps,
+  }) : steps = List.of(steps ?? const []),
+       super(type: 'repeat');
 
   factory RepeatStep.fromJson(Map<String, dynamic> j) => RepeatStep(
     id: j['id'],
@@ -528,6 +530,7 @@ class WaitStep extends Step {
 
 class StopStep extends Step {
   String? message;
+  bool throwError;
 
   StopStep({
     required super.id,
@@ -536,6 +539,7 @@ class StopStep extends Step {
     super.label,
     super.enabled,
     this.message,
+    this.throwError = false,
   }) : super(type: 'stop');
 
   factory StopStep.fromJson(Map<String, dynamic> j) => StopStep(
@@ -545,6 +549,7 @@ class StopStep extends Step {
     label: j['label'],
     enabled: j['enabled'] ?? true,
     message: j['message'],
+    throwError: j['throw_error'] ?? false,
   );
 
   @override
@@ -555,18 +560,25 @@ class StopStep extends Step {
     'enabled': enabled,
     'message': message,
     'color': color,
+    'throw_error': throwError,
   };
 
   @override
-  dynamic getField(String name) =>
-      name == 'message' ? message : super.getField(name);
+  dynamic getField(String name) => switch (name) {
+    'message' => message,
+    'throwError' => throwError,
+    _ => super.getField(name),
+  };
 
   @override
   void setField(String name, dynamic v) {
-    if (name == 'message') {
-      message = v?.toString();
-    } else {
-      super.setField(name, v);
+    switch (name) {
+      case 'message':
+        message = v?.toString();
+      case 'throwError':
+        throwError = v == true;
+      default:
+        super.setField(name, v);
     }
   }
 }
