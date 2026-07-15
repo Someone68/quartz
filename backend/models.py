@@ -100,6 +100,7 @@ class WaitStep(StepBase):
 class StopStep(StepBase):
     type: Literal["stop"] = "stop"
     message: str | None = None
+    throw_error: bool = False
 
 
 Step = Annotated[

@@ -13,7 +13,7 @@ ACTION = ActionDef(
     name="Cast to Number",
     description="Cast a value to a number.",
     icon="change_circle",
-    color="cyan",
+    color="purple",
     platforms=["linux", "windows"],
     inputs=[
         ActionInput(name="value", type="string", label="Value", required=True),

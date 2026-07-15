@@ -22,7 +22,9 @@ from simpleeval import simple_eval
 
 
 class ShortcutStopped(Exception):
-    pass
+    def __init__(self, message: str = "", is_error: bool = False):
+        super().__init__(message)
+        self.is_error = is_error
 
 
 def run_shortcut(shortcut: Shortcut, trigger_meta: dict = {}) -> RunLog:
@@ -50,7 +52,7 @@ def run_shortcut(shortcut: Shortcut, trigger_meta: dict = {}) -> RunLog:
         _run_steps(top_level_ids, context, steps_by_id)
         run.status = "success"
     except ShortcutStopped as e:
-        run.status = "stopped"
+        run.status = "failed" if e.is_error else "stopped"
         run.error = str(e)
     except Exception as e:
         run.status = "failed"
@@ -152,7 +154,7 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
 
         case StopStep():
             msg = resolve(step.message or "", context)
-            raise ShortcutStopped(msg)
+            raise ShortcutStopped(msg, is_error=step.throw_error)
 
         case _:
             raise ValueError(f"Unknown step type: {step.type}")
