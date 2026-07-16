@@ -529,19 +529,16 @@ class EditorPageState extends State<EditorPage> {
                 context: context,
                 stepId: step.id,
                 draggingId: _draggingId,
-                feedbackCard: SizedBox(),
+
+                // feedbackCard: SizedBox(),
                 // alternative design where it shows a copy of the step card
-                //
-                // feedbackCard: StepCard(
-                //   label: step.label ?? "error",
-                //   icon: symbolFromName(step.icon) ?? Icons.warning_rounded,
-                //   iconColor: context
-                //       .hue(getColor(step.color ?? "cs-error", context))
-                //       .primaryContainer,
-                //   isSelected: _selectedId == step.id,
-                //   description: step.description,
-                //   opacity: 0.4,
-                // ),
+                feedbackCard: StepCardFeedback(
+                  label: step.label ?? "error",
+                  icon: symbolFromName(step.icon) ?? Icons.warning_rounded,
+                  iconColor: context
+                      .hue(getColor(step.color ?? "cs-error", context))
+                      .primaryContainer,
+                ),
                 cardBox: () =>
                     key.currentContext?.findRenderObject() as RenderBox?,
               ),
@@ -1168,24 +1165,20 @@ class DragHandle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Draggable<String>(
       data: stepId,
-      axis: Axis.vertical,
-      dragAnchorStrategy: (draggable, context, position) {
-        final box = cardBox();
-        if (box == null || !box.hasSize) return Offset.zero;
-        return box.globalToLocal(position);
-      },
+      // dragAnchorStrategy: (draggable, context, position) {
+      //   final box = cardBox();
+      //   if (box == null || !box.hasSize) return Offset.zero;
+      //   return box.globalToLocal(position);
+      // },
+      dragAnchorStrategy: pointerDragAnchorStrategy,
       feedback: Builder(
         builder: (_) {
-          final box = cardBox();
-          final size = box?.hasSize == true ? box!.size : const Size(320, 56);
-          return SizedBox(
-            width: size.width,
-            height: size.height,
-            // child: Material(
-            //   elevation: 6,
-            //   color: Colors.transparent,
-            //   child: feedbackCard,
-            // ),
+          // final box = cardBox();
+          // final size = box?.hasSize == true ? box!.size : const Size(320, 56);
+          return Material(
+            elevation: 0,
+            color: Colors.transparent,
+            child: feedbackCard,
           );
         },
       ),

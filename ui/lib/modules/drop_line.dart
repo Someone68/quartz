@@ -29,6 +29,7 @@ class DropLine extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 100),
             height: active ? 4 : 0,
+            margin: active ? const EdgeInsets.symmetric(vertical: 10) : null,
             decoration: BoxDecoration(
               color: active
                   ? Theme.of(context).colorScheme.primary

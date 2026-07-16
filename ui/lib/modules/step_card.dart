@@ -71,3 +71,47 @@ class StepCard extends StatelessWidget {
     );
   }
 }
+
+class StepCardFeedback extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? iconColor;
+
+  const StepCardFeedback({
+    required this.icon,
+    required this.label,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 30, maxWidth: 320),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              buildStyledIcon(
+                context,
+                iconColor ?? Theme.of(context).colorScheme.primaryContainer,
+                icon,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

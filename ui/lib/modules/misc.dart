@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/iconname_to_unicode_map.dart';
 import 'package:ui/requests.dart';
 
-Container buildStyledIcon(BuildContext context, Color color, IconData? icon) {
+Container buildStyledIcon(
+  BuildContext context,
+  Color color,
+  IconData? icon, {
+  double size = 32,
+}) {
   return Container(
-    width: 32,
-    height: 32,
+    width: size,
+    height: size,
     decoration: BoxDecoration(
-      borderRadius: const BorderRadius.all(Radius.circular(8)),
+      borderRadius: BorderRadius.all(Radius.circular(size / 4)),
       color: color,
     ),
-    child: icon != null ? Icon(icon, size: 24) : null,
+    child: icon != null ? Icon(icon, size: size * 0.75) : null,
   );
 }
 
