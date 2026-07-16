@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Step;
+import 'package:ui/color_map.dart';
+import 'package:ui/hue_scheme.dart';
 import 'package:ui/modules/misc.dart';
+import 'package:ui/types.dart';
 
 class StepCard extends StatelessWidget {
   final IconData icon;
@@ -8,6 +11,7 @@ class StepCard extends StatelessWidget {
   final Color? iconColor;
   final Widget? trailing;
   final bool isSelected;
+  final double opacity;
 
   const StepCard({
     super.key,
@@ -17,14 +21,20 @@ class StepCard extends StatelessWidget {
     this.iconColor,
     this.isSelected = false,
     this.trailing,
+    this.opacity = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
     final card = Card(
       color: isSelected
-          ? Theme.of(context).colorScheme.surfaceContainerHighest
-          : null,
+          ? Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: opacity)
+          : Theme.of(
+              context,
+            ).colorScheme.surfaceContainer.withValues(alpha: opacity),
+      elevation: opacity < 1 ? 0 : null,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 40),
         child: Padding(
