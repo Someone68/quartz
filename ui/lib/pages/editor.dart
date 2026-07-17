@@ -5,8 +5,9 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
 import 'package:ui/color_map.dart';
-import 'package:ui/hue_scheme.dart';
+import 'package:ui/extensions.dart';
 import 'package:ui/modules/action_libary.dart';
+import 'package:ui/modules/custom_tec.dart';
 import 'package:ui/modules/drop_line.dart';
 import 'package:ui/modules/misc.dart';
 import 'package:ui/modules/resizable_container.dart';
@@ -1078,20 +1079,18 @@ class InspectorPanelState extends State<InspectorPanel> {
         );
         break;
       case 'number':
-        field = TextFormField(
-          initialValue: value?.toString() ?? '',
-          keyboardType: TextInputType.number,
+        field = CustomTextField(
+          key: ValueKey(input.name),
+          value: value?.toString() ?? '',
           decoration: const InputDecoration(isDense: true),
           onChanged: (v) => set(num.tryParse(v)),
-          maxLines: null,
         );
         break;
       default: // string, path, template, and anything unknown
-        field = TextFormField(
-          initialValue: value?.toString() ?? '',
-          decoration: const InputDecoration(isDense: true),
+        field = CustomTextField(
+          key: ValueKey(input.name),
+          value: value?.toString() ?? '',
           onChanged: set,
-          maxLines: null,
         );
     }
 

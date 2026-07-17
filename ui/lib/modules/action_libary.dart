@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ui/color_map.dart';
-import 'package:ui/hue_scheme.dart';
+import 'package:ui/extensions.dart';
 import 'package:ui/modules/misc.dart';
 import 'package:ui/types.dart';
 

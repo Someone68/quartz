@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'extensions.dart';
+
 import 'shell.dart';
 import 'theme_notifier.dart';
 
@@ -30,12 +32,22 @@ class _QuartzAppState extends State<QuartzApp> {
           colorSchemeSeed: theme.seed,
           useMaterial3: true,
           textTheme: GoogleFonts.interTextTheme(),
+          extensions: [
+            AppTextThemes(mono: GoogleFonts.jetBrainsMonoTextTheme()),
+          ],
         ),
         darkTheme: ThemeData(
           brightness: Brightness.dark,
           colorSchemeSeed: theme.seed,
           useMaterial3: true,
           textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+          extensions: [
+            AppTextThemes(
+              mono: GoogleFonts.jetBrainsMonoTextTheme(
+                ThemeData.dark().textTheme,
+              ),
+            ),
+          ],
         ),
         themeMode: theme.mode,
         home: const AppShell(),
