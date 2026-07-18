@@ -116,9 +116,33 @@ Step = Annotated[
 ]
 
 
+class TriggerInput(BaseModel):
+    name: str
+    type: Literal[
+        "string", "number", "boolean", "path", "choice", "template", "dynamic"
+    ]
+    label: str
+    required: bool = False
+    default: Any = None
+    options: list[str] | None = None
+    min: float | None = None
+    max: float | None = None
+
 class Trigger(BaseModel):
-    type: str
+    type: Literal["hotkey", "schedule", "file_watch", "directory_watch", "app_open", "app_close", "clipboard", "network", "idle", "startup", "manual"]
     config: dict[str, Any] = {}
+
+class TriggerDef(BaseModel):
+    type: Literal["hotkey", "schedule", "file_watch", "directory_watch", "app_open", "app_close", "clipboard", "network", "idle", "startup", "manual"]
+    name: str
+    description: str
+    icon: str
+    color: str
+    platforms: list[str]
+    inputs: list[TriggerInput]
+    make_listener: Callable = Field(exclude=True)
+
+    model_config = {"arbitrary_types_allowed": True}
 
 
 def new_id() -> str:
