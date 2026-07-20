@@ -53,7 +53,11 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => widget.onEdit(
-          Shortcut(id: '', name: 'New Shortcut', trigger: Trigger(type: '')),
+          Shortcut(
+            id: '',
+            name: 'New Shortcut',
+            trigger: Trigger(type: 'manual'),
+          ),
         ),
         label: const Text('Create Shortcut'),
         icon: const Icon(Icons.add),

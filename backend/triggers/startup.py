@@ -1,7 +1,22 @@
+from models import TriggerDef
+
+
 class StartupListener:
-    def __init__(self, fire):
-        self._fire = fire
+    def __init__(self, config, fire):
+        self.config = config
+        self.fire = fire
+
     def start(self):
-        self._fire()
+        self.fire({})
+
     def stop(self):
         pass
+
+
+TRIGGER = TriggerDef(
+    type="startup", name="On Startup", icon="power",
+    description="Triggers once when Quartz starts",
+    color="purple", platforms=["linux", "windows"],
+    inputs=[],
+    make_listener=lambda config, fire: StartupListener(config, fire),
+)

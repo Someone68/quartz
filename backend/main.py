@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 import executor
 import registry
 import storage
+import trigger_manager
+import trigger_registry
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models import Shortcut
@@ -18,7 +20,13 @@ async def lifespan(app: FastAPI):
     print("Loading actions...")
     registry.load_all()
     print(f"Loaded {len(registry.all_actions())} actions.")
+    print("Loading triggers...")
+    trigger_registry.load_all()
+    print(f"Loaded {len(trigger_registry.all_triggers())} triggers.")
+    print("Starting trigger listeners...")
+    trigger_manager.start_all()
     yield
+    trigger_manager.stop_all()
 
 
 app = FastAPI(title="Quartz Backend", lifespan=lifespan)
@@ -39,6 +47,7 @@ def list_shortcuts():
 @app.post("/shortcuts", status_code=201)
 def create_shortcut(shortcut: Shortcut):
     storage.save_shortcut(shortcut)
+    trigger_manager.refresh(shortcut)
     return shortcut
 
 
@@ -57,6 +66,7 @@ def update_shortcut(shortcut_id: str, shortcut: Shortcut):
         raise HTTPException(status_code=404, detail="Shortcut not found")
     shortcut.id = shortcut_id
     storage.save_shortcut(shortcut)
+    trigger_manager.refresh(shortcut)
     return shortcut
 
 
@@ -67,12 +77,14 @@ def rename_shortcut(shortcut_id: str, body: RenameRequest):
         raise HTTPException(status_code=404, detail="Shortcut not found")
     shortcut.name = body.name
     storage.save_shortcut(shortcut)
+    trigger_manager.refresh(shortcut)
     return shortcut
 
 
 @app.delete("/shortcuts/{shortcut_id}", status_code=204)
 def delete_shortcut(shortcut_id: str):
     storage.delete_shortcut(shortcut_id)
+    trigger_manager.unregister(shortcut_id)
 
 
 @app.post("/shortcuts/{shortcut_id}/run")
@@ -100,6 +112,11 @@ def get_run(shortcut_id: str, run_id: str):
 @app.get("/actions")
 def list_actions():
     return registry.all_actions_by_category()
+
+
+@app.get("/triggers")
+def list_triggers():
+    return trigger_registry.all_triggers()
 
 
 if __name__ == "__main__":

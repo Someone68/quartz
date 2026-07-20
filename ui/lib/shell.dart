@@ -55,7 +55,7 @@ class _AppShellState extends State<AppShell> {
   Shortcut _blankShortcut() => Shortcut(
     id: '',
     name: 'New Shortcut',
-    trigger: Trigger(type: ''),
+    trigger: Trigger(type: 'manual'),
     steps: [],
   );
 

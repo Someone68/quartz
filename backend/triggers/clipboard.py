@@ -1,5 +1,5 @@
-from backend.models import TriggerDef, TriggerInput
-from backend.triggers._base import PollingListener
+from models import TriggerDef, TriggerInput
+from triggers._base import PollingListener
 import pyperclip
 
 

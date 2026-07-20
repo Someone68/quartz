@@ -586,7 +586,8 @@ class StopStep extends Step {
 // ---- Trigger ----
 
 class Trigger {
-  final String type;
+  final String
+  type; // "hotkey", "schedule", "file_watch", "directory_watch", "app_open", "app_close", "clipboard", "network", "idle", "startup", "manual"
   final Map<String, dynamic> config;
 
   Trigger({required this.type, this.config = const {}});

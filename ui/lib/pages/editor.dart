@@ -152,6 +152,7 @@ class EditorPageState extends State<EditorPage> {
   /// because steps now nest inside If branches — a flat index no longer
   /// identifies a step across the tree.
   String? _selectedId;
+  bool _shortcutSelected = false;
 
   @override
   Widget build(BuildContext context) {
@@ -228,14 +229,23 @@ class EditorPageState extends State<EditorPage> {
                           child: Column(
                             // spacing: 16.0,
                             children: [
-                              StepCard(
-                                label: widget.shortcut.name,
-                                icon:
-                                    symbolFromName(widget.shortcut.icon) ??
-                                    Icons.warning_rounded,
-                                iconColor: Theme.of(
-                                  context,
-                                ).colorScheme.primaryContainer,
+                              GestureDetector(
+                                onTap: () => {
+                                  setState(() {
+                                    _shortcutSelected = true;
+                                    _selectedId = null;
+                                  }),
+                                }, // show inspector to edit name and trigger
+                                child: StepCard(
+                                  isSelected: _shortcutSelected,
+                                  label: widget.shortcut.name,
+                                  icon:
+                                      symbolFromName(widget.shortcut.icon) ??
+                                      Icons.warning_rounded,
+                                  iconColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                                ),
                               ),
                               ..._renderIds(
                                 context,
@@ -517,7 +527,10 @@ class EditorPageState extends State<EditorPage> {
             child: child,
           ),
           child: GestureDetector(
-            onTap: () => setState(() => _selectedId = step.id),
+            onTap: () => setState(() {
+              _selectedId = step.id;
+              _shortcutSelected = false;
+            }),
             child: StepCard(
               label: step.label ?? "error",
               icon: symbolFromName(step.icon) ?? Icons.warning_rounded,
