@@ -88,13 +88,15 @@ class LoopStep(StepBase):
 
 class RepeatStep(StepBase):
     type: Literal["repeat"] = "repeat"
-    times: int
+    # int, or a "{{...}}" template string resolved + coerced at run time.
+    times: int | str
     steps: list[str] = []
 
 
 class WaitStep(StepBase):
     type: Literal["wait"] = "wait"
-    duration: int
+    # int, or a "{{...}}" template string resolved + coerced at run time.
+    duration: int | str
 
 
 class StopStep(StepBase):

@@ -1100,7 +1100,8 @@ class InspectorPanelState extends State<InspectorPanel> {
           key: ValueKey(input.name),
           value: value?.toString() ?? '',
           decoration: const InputDecoration(isDense: true),
-          onChanged: (v) => set(num.tryParse(v)),
+          // onChanged: (v) => set(num.tryParse(v)),
+          onChanged: set,
         );
         break;
       default: // string, path, template, and anything unknown
@@ -1108,6 +1109,7 @@ class InspectorPanelState extends State<InspectorPanel> {
           key: ValueKey(input.name),
           value: value?.toString() ?? '',
           onChanged: set,
+          decoration: const InputDecoration(isDense: true),
         );
     }
 

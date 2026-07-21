@@ -434,7 +434,8 @@ class LoopStep extends Step {
 }
 
 class RepeatStep extends Step {
-  int times;
+  // dynamic: an int, or a `{{...}}` template string resolved at run time.
+  dynamic times;
   List<String> steps;
 
   RepeatStep({
@@ -476,7 +477,9 @@ class RepeatStep extends Step {
   @override
   void setField(String name, dynamic v) {
     if (name == 'times') {
-      times = (v as num?)?.toInt() ?? 0;
+      // Keep raw so `{{...}}` templates/expressions survive; backend resolves
+      // then coerces to int at run time.
+      times = v;
     } else {
       super.setField(name, v);
     }
@@ -484,7 +487,8 @@ class RepeatStep extends Step {
 }
 
 class WaitStep extends Step {
-  int duration;
+  // dynamic: an int, or a `{{...}}` template string resolved at run time.
+  dynamic duration;
 
   WaitStep({
     required super.id,
@@ -521,7 +525,9 @@ class WaitStep extends Step {
   @override
   void setField(String name, dynamic v) {
     if (name == 'duration') {
-      duration = (v as num?)?.toInt() ?? 0;
+      // Keep raw so `{{...}}` templates/expressions survive; backend resolves
+      // then coerces to a number at run time.
+      duration = v;
     } else {
       super.setField(name, v);
     }
