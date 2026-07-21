@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ui/extensions.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -284,11 +285,71 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return TextField(
       style: Theme.of(context).extension<AppTextThemes>()!.mono.bodyMedium,
       controller: _controller,
+      inputFormatters: [BracketFormatter()],
       focusNode: _focusNode,
       decoration: widget.decoration,
       maxLines: null,
       maxLength: widget.maxLength,
       onChanged: (_) => widget.onChanged(_controller.rawText),
+    );
+  }
+}
+
+class BracketFormatter extends TextInputFormatter {
+  static const _pairs = {
+    '{': '}',
+    '(': ')',
+    '[': ']',
+    '<': '>',
+    '\'': '\'',
+    '"': '"',
+  };
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.length == oldValue.text.length - 1) {
+      final pos = newValue.selection.end;
+      if (pos >= 0 && pos < newValue.text.length) {
+        final deleted = oldValue.text[pos];
+        final next = newValue.text[pos];
+        if (_pairs[deleted] == next) {
+          final text = newValue.text.replaceRange(pos, pos + 1, '');
+          return TextEditingValue(
+            text: text,
+            selection: TextSelection.collapsed(offset: pos),
+          );
+        }
+      }
+    }
+
+    // only handle single-char insertions at a collapsed cursor
+    if (newValue.text.length != oldValue.text.length + 1) return newValue;
+    if (!newValue.selection.isCollapsed) return newValue;
+
+    final pos = newValue.selection.end;
+    if (pos <= 0) return newValue;
+
+    final typed = newValue.text[pos - 1];
+    final closers = _pairs.values.toSet();
+    if (closers.contains(typed) &&
+        pos <= oldValue.text.length &&
+        oldValue.text[pos - 1] == typed) {
+      return TextEditingValue(
+        text: oldValue.text,
+        selection: TextSelection.collapsed(offset: pos),
+      );
+    }
+
+    final close = _pairs[typed];
+    if (close == null) return newValue;
+
+    final text = newValue.text.replaceRange(pos, pos, close);
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: pos), // between the pair
     );
   }
 }
