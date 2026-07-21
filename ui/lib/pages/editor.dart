@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ui/color_map.dart';
 import 'package:ui/extensions.dart';
 import 'package:ui/modules/action_libary.dart';
@@ -303,7 +304,10 @@ class EditorPageState extends State<EditorPage> {
                                 widget.shortcut.id.isEmpty
                                     ? 'New Shortcut'
                                     : widget.shortcut.id,
-                                style: Theme.of(context).textTheme.bodyMedium
+                                style: Theme.of(context)
+                                    .extension<AppTextThemes>()!
+                                    .mono
+                                    .bodySmall
                                     ?.copyWith(
                                       color: Theme.of(
                                         context,
@@ -1080,6 +1084,7 @@ class InspectorPanelState extends State<InspectorPanel> {
         break;
       case 'choice':
         field = DropdownButton<String>(
+          style: Theme.of(context).extension<AppTextThemes>()!.mono.bodyMedium,
           isExpanded: true,
           value: (input.options?.contains(value) ?? false)
               ? value as String

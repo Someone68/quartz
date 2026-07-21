@@ -274,6 +274,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      style: Theme.of(context).extension<AppTextThemes>()!.mono.bodyMedium,
       controller: _controller,
       focusNode: _focusNode,
       decoration: widget.decoration,
