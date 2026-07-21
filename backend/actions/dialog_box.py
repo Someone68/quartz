@@ -1,72 +1,15 @@
-import os
-import subprocess
-import tkinter as tk
-from tkinter import simpledialog
-
+import dialogs
 from models import ActionDef, ActionInput, ActionOutput
 
 
 def _run(inputs: dict, context: dict) -> dict:
-    title = inputs["title"]
-    prompt = inputs["prompt"]
-    icon = inputs.get("icon", "info")
-    backend = inputs.get("backend", "auto")
-
-    de = str(os.environ.get("XDG_CURRENT_DESKTOP")).lower()
-    if de == "kde" and backend == "auto" or backend == "kdialog (kde)":
-        result = subprocess.run(
-            [
-                "kdialog",
-                "--title",
-                title,
-                "--icon",
-                "dialog-information"
-                if icon == "info"
-                else "dialog-error"
-                if icon == "error"
-                else "dialog-warning"
-                if icon == "warning"
-                else "dialog-question",
-                "--inputbox",
-                prompt,
-            ],
-            capture_output=True,
-            text=True,
-        )
-        body = result.stdout.strip()
-    elif de == "gnome" and backend == "auto" or backend == "zenity (gnome)":
-        result = subprocess.run(
-            [
-                "zenity",
-                "--info",
-                "--text",
-                prompt,
-                "--title",
-                title,
-                "--icon",
-                icon,
-                *(
-                    ["--width", str(inputs.get("width", 400))]
-                    if inputs.get("width")
-                    else []
-                ),
-                *(
-                    ["--height", str(inputs.get("height", 300))]
-                    if inputs.get("height")
-                    else []
-                ),
-            ],
-            capture_output=True,
-            text=True,
-        )
-        body = result.stdout.strip()
-    else:
-        root = tk.Tk()
-        root.withdraw()
-        body = simpledialog.askstring(title, prompt)
-        root.destroy()
-
-    return {"response": body}
+    response = dialogs.prompt(
+        title=str(inputs["title"]),
+        prompt_text=str(inputs["prompt"]),
+        icon=inputs.get("icon", "question"),
+        backend=inputs.get("backend", "auto"),
+    )
+    return {"response": response}
 
 
 ACTION = ActionDef(

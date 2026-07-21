@@ -1,71 +1,16 @@
-import os
-import subprocess
-import tkinter as tk
-from tkinter import messagebox
-
+import dialogs
 from models import ActionDef, ActionInput, ActionOutput
 
 
 def _run(inputs: dict, context: dict) -> dict:
-    title = str(inputs["title"]) or ""
-    body = str(inputs["body"]) or ""
-    icon = inputs.get("icon", "info")
-    backend = inputs.get("backend", "auto")
-
-    de = str(os.environ.get("XDG_CURRENT_DESKTOP")).lower()
-    if de == "kde" and backend == "auto" or backend == "kdialog (kde)":
-        subprocess.run(
-            [
-                "kdialog",
-                "--title",
-                title,
-                "--icon",
-                "dialog-information"
-                if icon == "info"
-                else "dialog-error"
-                if icon == "error"
-                else "dialog-warning"
-                if icon == "warning"
-                else "dialog-question",
-                "--msgbox"
-                if icon == "info"
-                else "--error"
-                if icon == "error"
-                else "--sorry"
-                if icon == "warning"
-                else "--msgbox",
-                body,
-            ]
-        )
-    elif de == "gnome" and backend == "auto" or backend == "zenity (gnome)":
-        subprocess.run(
-            [
-                "zenity",
-                "--info",
-                "--text",
-                body,
-                "--title",
-                title,
-                "--icon",
-                icon,
-                *(
-                    ["--width", str(inputs.get("width", 400))]
-                    if inputs.get("width")
-                    else []
-                ),
-                *(
-                    ["--height", str(inputs.get("height", 300))]
-                    if inputs.get("height")
-                    else []
-                ),
-            ]
-        )
-    else:
-        root = tk.Tk()
-        root.withdraw()
-        messagebox.showinfo(title, body, icon=icon)
-        root.destroy()
-
+    dialogs.message(
+        title=str(inputs["title"]),
+        body=str(inputs["body"]),
+        icon=inputs.get("icon", "info"),
+        backend=inputs.get("backend", "auto"),
+        width=inputs.get("width"),
+        height=inputs.get("height"),
+    )
     return {}
 
 
