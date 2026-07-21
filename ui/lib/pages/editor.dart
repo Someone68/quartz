@@ -256,12 +256,12 @@ class EditorPageState extends State<EditorPage> {
                               // Top-level add button — no branch, so the new step
                               // lands at the root of the flow.
                               _addActionButton(context, 0, null),
-                              FloatingActionButton.extended(
-                                label: Text("debug: print shortcut"),
-                                onPressed: () {
-                                  printObject(widget.shortcut);
-                                },
-                              ),
+                              // FloatingActionButton.extended(
+                              //   label: Text("debug: print shortcut"),
+                              //   onPressed: () {
+                              //     printObject(widget.shortcut);
+                              //   },
+                              // ),
                             ],
                           ),
                         ),
