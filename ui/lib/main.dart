@@ -29,7 +29,11 @@ class _QuartzAppState extends State<QuartzApp> {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           brightness: Brightness.light,
-          colorSchemeSeed: theme.seed,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: theme.seed,
+            dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot,
+            brightness: Brightness.light,
+          ),
           useMaterial3: true,
           textTheme: GoogleFonts.interTextTheme(),
           extensions: [
@@ -38,7 +42,11 @@ class _QuartzAppState extends State<QuartzApp> {
         ),
         darkTheme: ThemeData(
           brightness: Brightness.dark,
-          colorSchemeSeed: theme.seed,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: theme.seed,
+            dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot,
+            brightness: Brightness.dark,
+          ),
           useMaterial3: true,
           textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
           extensions: [

@@ -98,87 +98,87 @@ class _AppShellState extends State<AppShell> {
       ],
     );
 
-    if (!_editorActive) {
-      return Scaffold(
-        body: Row(
-          children: [
-            rail,
-            const VerticalDivider(width: 1, thickness: 1),
-            Expanded(
-              child: IndexedStack(index: _index, children: pages),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Editor page: full-width content + collapsible rail overlay.
+    // if (!_editorActive) {
     return Scaffold(
-      body: Stack(
+      body: Row(
         children: [
-          // Page content — full width.
-          Positioned.fill(
+          rail,
+          const VerticalDivider(width: 1, thickness: 1),
+          Expanded(
             child: IndexedStack(index: _index, children: pages),
           ),
-
-          // Dark scrim — fades in/out; IgnorePointer when transparent.
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: !_navOpen,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeInOut,
-                opacity: _navOpen ? 1.0 : 0.0,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => setState(() => _navOpen = false),
-                  child: const ColoredBox(color: Color(0x66000000)),
-                ),
-              ),
-            ),
-          ),
-
-          // Sliding rail overlay.
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeInOut,
-            left: _navOpen ? 0 : -_kRailWidth,
-            top: 0,
-            bottom: 0,
-            child: Material(
-              elevation: 4,
-              child: SizedBox(width: _kRailWidth, child: rail),
-            ),
-          ),
-
-          // Chevron toggle button (only when rail is closed).
-          if (!_navOpen)
-            Positioned(
-              left: 0,
-              bottom: 12,
-              child: Material(
-                color: scheme.surfaceContainerLow,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
-                elevation: 2,
-                child: InkWell(
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
-                  ),
-                  onTap: () => setState(() => _navOpen = true),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    child: Icon(Icons.chevron_right, size: 18),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
+    // }
+
+    // Editor page: full-width content + collapsible rail overlay.
+    // return Scaffold(
+    //   body: Stack(
+    //     children: [
+    //       // Page content — full width.
+    //       Positioned.fill(
+    //         child: IndexedStack(index: _index, children: pages),
+    //       ),
+
+    //       // Dark scrim — fades in/out; IgnorePointer when transparent.
+    //       Positioned.fill(
+    //         child: IgnorePointer(
+    //           ignoring: !_navOpen,
+    //           child: AnimatedOpacity(
+    //             duration: const Duration(milliseconds: 180),
+    //             curve: Curves.easeInOut,
+    //             opacity: _navOpen ? 1.0 : 0.0,
+    //             child: GestureDetector(
+    //               behavior: HitTestBehavior.opaque,
+    //               onTap: () => setState(() => _navOpen = false),
+    //               child: const ColoredBox(color: Color(0x66000000)),
+    //             ),
+    //           ),
+    //         ),
+    //       ),
+
+    //       // Sliding rail overlay.
+    //       AnimatedPositioned(
+    //         duration: const Duration(milliseconds: 180),
+    //         curve: Curves.easeInOut,
+    //         left: _navOpen ? 0 : -_kRailWidth,
+    //         top: 0,
+    //         bottom: 0,
+    //         child: Material(
+    //           elevation: 4,
+    //           child: SizedBox(width: _kRailWidth, child: rail),
+    //         ),
+    //       ),
+
+    //       // Chevron toggle button (only when rail is closed).
+    //       if (!_navOpen)
+    //         Positioned(
+    //           left: 0,
+    //           bottom: 12,
+    //           child: Material(
+    //             color: scheme.surfaceContainerLow,
+    //             borderRadius: const BorderRadius.only(
+    //               topRight: Radius.circular(8),
+    //               bottomRight: Radius.circular(8),
+    //             ),
+    //             elevation: 2,
+    //             child: InkWell(
+    //               borderRadius: const BorderRadius.only(
+    //                 topRight: Radius.circular(8),
+    //                 bottomRight: Radius.circular(8),
+    //               ),
+    //               onTap: () => setState(() => _navOpen = true),
+    //               child: const Padding(
+    //                 padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+    //                 child: Icon(Icons.chevron_right, size: 18),
+    //               ),
+    //             ),
+    //           ),
+    //         ),
+    //     ],
+    //   ),
+    // );
   }
 }
 
