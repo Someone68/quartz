@@ -6,3 +6,4 @@ simpleeval
 pynput
 watchdog
 psutil
+pyperclip
