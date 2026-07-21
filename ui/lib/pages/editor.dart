@@ -275,7 +275,6 @@ class EditorPageState extends State<EditorPage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         spacing: 16,
                         children: [
-                          SizedBox(width: 16),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.start,
@@ -303,7 +302,7 @@ class EditorPageState extends State<EditorPage> {
                               Text(
                                 widget.shortcut.id.isEmpty
                                     ? 'New Shortcut'
-                                    : ' ${widget.shortcut.id}',
+                                    : widget.shortcut.id,
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
                                       color: Theme.of(
