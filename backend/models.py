@@ -130,15 +130,42 @@ class TriggerInput(BaseModel):
     min: float | None = None
     max: float | None = None
 
+
 new_id = lambda: str(uuid4())
+
 
 class Trigger(BaseModel):
     id: str = Field(default_factory=new_id)
-    type: Literal["hotkey", "schedule", "file_watch", "directory_watch", "app_open", "app_close", "clipboard", "network", "idle", "startup", "manual"]
+    type: Literal[
+        "hotkey",
+        "schedule",
+        "file_watch",
+        "directory_watch",
+        "app_open",
+        "app_close",
+        "clipboard",
+        "network",
+        "idle",
+        "startup",
+        "manual",
+    ]
     config: dict[str, Any] = {}
 
+
 class TriggerDef(BaseModel):
-    type: Literal["hotkey", "schedule", "file_watch", "directory_watch", "app_open", "app_close", "clipboard", "network", "idle", "startup", "manual"]
+    type: Literal[
+        "hotkey",
+        "schedule",
+        "file_watch",
+        "directory_watch",
+        "app_open",
+        "app_close",
+        "clipboard",
+        "network",
+        "idle",
+        "startup",
+        "manual",
+    ]
     name: str
     description: str
     icon: str
