@@ -635,6 +635,19 @@ class TriggerInput {
   };
 }
 
+class TriggerOutput {
+  final String name;
+  final String type; // string, number, boolean, path, list
+  final String label;
+
+  TriggerOutput({required this.name, required this.type, required this.label});
+
+  factory TriggerOutput.fromJson(Map<String, dynamic> j) =>
+      TriggerOutput(name: j['name'], type: j['type'], label: j['label']);
+
+  Map<String, dynamic> toJson() => {'name': name, 'type': type, 'label': label};
+}
+
 // Note: no `make_listener` field here (excluded on the Python side too).
 class TriggerDef {
   final String type;
@@ -644,6 +657,7 @@ class TriggerDef {
   final String color;
   final List<String> platforms;
   final List<TriggerInput> inputs;
+  final List<TriggerOutput> outputs;
 
   TriggerDef({
     required this.type,
@@ -653,6 +667,7 @@ class TriggerDef {
     required this.color,
     required this.platforms,
     required this.inputs,
+    required this.outputs,
   });
 
   factory TriggerDef.fromJson(Map<String, dynamic> j) => TriggerDef(
@@ -662,8 +677,9 @@ class TriggerDef {
     icon: j['icon'],
     color: j['color'],
     platforms: (j['platforms'] as List).cast<String>(),
-    inputs: (j['inputs'] as List)
-        .map((e) => TriggerInput.fromJson(e))
+    inputs: (j['inputs'] as List).map((e) => TriggerInput.fromJson(e)).toList(),
+    outputs: (j['outputs'] as List)
+        .map((e) => TriggerOutput.fromJson(e))
         .toList(),
   );
 
@@ -675,6 +691,7 @@ class TriggerDef {
     'color': color,
     'platforms': platforms,
     'inputs': inputs.map((e) => e.toJson()).toList(),
+    'outputs': outputs.map((e) => e.toJson()).toList(),
   };
 }
 

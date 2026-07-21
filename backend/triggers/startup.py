@@ -18,5 +18,6 @@ TRIGGER = TriggerDef(
     description="Triggers once when Quartz starts",
     color="purple", platforms=["linux", "windows"],
     inputs=[],
+    outputs=[],
     make_listener=lambda config, fire: StartupListener(config, fire),
 )

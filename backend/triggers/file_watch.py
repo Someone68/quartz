@@ -1,4 +1,4 @@
-from models import TriggerDef, TriggerInput
+from models import TriggerDef, TriggerInput, TriggerOutput
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -43,5 +43,6 @@ TRIGGER = TriggerDef(
         TriggerInput(name="path", type="path", label="Path", required=True),
         TriggerInput(name="recursive", type="boolean", label="Recursive", default=False),
     ],
+    outputs=[TriggerOutput(name="event_type", type="string", label="Event type"), TriggerOutput(name="path", type="path", label="Path")],
     make_listener=lambda config, fire: FileWatchListener(config, fire),
 )

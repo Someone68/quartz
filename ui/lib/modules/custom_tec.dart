@@ -179,6 +179,8 @@ class _VarChip extends StatelessWidget {
         return (Symbols.data_object, rest, "variable");
       case 'steps':
         return (Symbols.graph_8, rest, "step");
+      case 'trigger':
+        return (Symbols.webhook, rest, "trigger");
       default:
         return (
           Symbols.help_center,
@@ -201,6 +203,8 @@ class _VarChip extends StatelessWidget {
             ? theme.colorScheme.primaryContainer
             : ns == "step"
             ? theme.colorScheme.secondaryContainer
+            : ns == "trigger"
+            ? theme.colorScheme.tertiaryContainer
             : theme.colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(4),
       ),
@@ -214,6 +218,8 @@ class _VarChip extends StatelessWidget {
                 ? theme.colorScheme.onPrimaryContainer
                 : ns == "step"
                 ? theme.colorScheme.onSecondaryContainer
+                : ns == "trigger"
+                ? theme.colorScheme.onTertiaryContainer
                 : theme.colorScheme.onErrorContainer,
           ),
           const SizedBox(width: 3),

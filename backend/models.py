@@ -130,6 +130,10 @@ class TriggerInput(BaseModel):
     min: float | None = None
     max: float | None = None
 
+class TriggerOutput(BaseModel):
+    name: str
+    type: Literal["string", "number", "boolean", "path", "list"]
+    label: str
 
 new_id = lambda: str(uuid4())
 
@@ -172,7 +176,12 @@ class TriggerDef(BaseModel):
     color: str
     platforms: list[str]
     inputs: list[TriggerInput]
+    outputs: list[TriggerOutput]
+
     make_listener: Callable = Field(exclude=True)
+    # Best-effort current output values for a manual run (no real fire event).
+    # Given the trigger config, returns a partial trigger-meta payload.
+    sample: Callable = Field(default=lambda config: {}, exclude=True)
 
     model_config = {"arbitrary_types_allowed": True}
 

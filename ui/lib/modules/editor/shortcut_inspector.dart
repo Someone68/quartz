@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Step;
+import 'package:flutter/services.dart';
 import 'package:ui/extensions.dart';
 import 'package:ui/modules/custom_tec.dart';
+import 'package:ui/modules/misc.dart';
 import 'package:ui/types.dart';
 
 class ShortcutInspector extends StatefulWidget {
@@ -106,20 +108,100 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
           ),
           const SizedBox(height: 16),
 
-          // Config fields for the selected trigger type.
-          if (def != null)
-            Expanded(
-              child: ListView(
-                children: def.inputs
-                    .map((i) => _triggerField(context, i))
-                    .toList(),
+          // Config fields for the selected trigger type. Always Expanded so the
+          // outputs box below stays pinned to the bottom, even with no fields.
+          Expanded(
+            child: def != null
+                ? ListView(
+                    children: def.inputs
+                        .map((i) => _triggerField(context, i))
+                        .toList(),
+                  )
+                : _trigger.type != "manual"
+                ? Text(
+                    'No config schema for "${_trigger.type}".',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )
+                : const SizedBox.shrink(),
+          ),
+
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(8.0),
               ),
-            )
-          else if (_trigger.type != "manual")
-            Text(
-              'No config schema for "${_trigger.type}".',
-              style: Theme.of(context).textTheme.bodySmall,
+              padding: EdgeInsets.all(16.0),
+              width: double.infinity,
+              child: Column(
+                spacing: 8.0,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (def?.outputs.isNotEmpty ?? false) ...[
+                    Text(
+                      "Trigger outputs",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.left,
+                    ),
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: [
+                        for (var output in def!.outputs) ...[
+                          Tooltip(
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(4.0),
+                            ),
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            message:
+                                "\"${output.name}\" is of type \"${output.type}\".\nYou can reference this output using {{trigger.${output.name}}} (click to copy)",
+                            child: TinyChipButton(
+                              label: output.name,
+                              color: output.type == "string"
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer
+                                  : output.type == "number"
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.secondaryContainer
+                                  : output.type == "boolean"
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.tertiaryContainer
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainer,
+                              context: context,
+                              onTap: () {
+                                Clipboard.setData(
+                                  ClipboardData(
+                                    text: "{{trigger.${output.name}}}",
+                                  ),
+                                );
+                                showSnackBar(context, "Copied to clipboard");
+                              },
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ] else
+                    Text(
+                      "No outputs",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.left,
+                    ),
+                ],
+              ),
             ),
+          ),
         ],
       ),
     );
