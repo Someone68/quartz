@@ -3,13 +3,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
-from models import RunLog, Shortcut, ShortcutSummary, Step
+from models import RunLog, Shortcut, ShortcutSummary, Step, TriggerDef
 from pydantic.type_adapter import TypeAdapter
 
 CONFIG_DIR = Path("~/.config/quartz").expanduser()
 SHORTCUTS_DIR = CONFIG_DIR / "shortcuts"
 RUNS_DIR = CONFIG_DIR / "runs"
 ACTIONS_CACHE = CONFIG_DIR / "actions_cache.json"
+TRIGGERS_CACHE = CONFIG_DIR / "triggers_cache.json"
 
 StepAdapter = TypeAdapter(Step)
 
@@ -93,3 +94,9 @@ def save_actions_cache(actions_by_category: dict) -> None:
     reads on startup, so it does not depend on a running backend."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     ACTIONS_CACHE.write_text(json.dumps(actions_by_category, indent=2))
+
+
+def save_triggers_cache(triggers: dict[str, TriggerDef]) -> None:
+    """Write the trigger defs to a cache file the UI reads on startup."""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    TRIGGERS_CACHE.write_text(json.dumps(triggers, indent=2))

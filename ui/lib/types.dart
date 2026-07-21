@@ -591,9 +591,111 @@ class StopStep extends Step {
 
 // ---- Trigger ----
 
+class TriggerInput {
+  final String name;
+  final String type; // string, number, boolean, path, choice, template, dynamic
+  final String label;
+  final bool required;
+  final dynamic default_;
+  final List<String>? options;
+  final double? min;
+  final double? max;
+
+  TriggerInput({
+    required this.name,
+    required this.type,
+    required this.label,
+    this.required = false,
+    this.default_,
+    this.options,
+    this.min,
+    this.max,
+  });
+
+  factory TriggerInput.fromJson(Map<String, dynamic> j) => TriggerInput(
+    name: j['name'],
+    type: j['type'],
+    label: j['label'],
+    required: j['required'] ?? false,
+    default_: j['default'],
+    options: (j['options'] as List?)?.cast<String>(),
+    min: (j['min'] as num?)?.toDouble(),
+    max: (j['max'] as num?)?.toDouble(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'type': type,
+    'label': label,
+    'required': required,
+    'default': default_,
+    'options': options,
+    'min': min,
+    'max': max,
+  };
+}
+
+// Note: no `make_listener` field here (excluded on the Python side too).
+class TriggerDef {
+  final String type;
+  final String name;
+  final String description;
+  final String icon;
+  final String color;
+  final List<String> platforms;
+  final List<TriggerInput> inputs;
+
+  TriggerDef({
+    required this.type,
+    required this.name,
+    required this.description,
+    required this.icon,
+    required this.color,
+    required this.platforms,
+    required this.inputs,
+  });
+
+  factory TriggerDef.fromJson(Map<String, dynamic> j) => TriggerDef(
+    type: j['type'],
+    name: j['name'],
+    description: j['description'],
+    icon: j['icon'],
+    color: j['color'],
+    platforms: (j['platforms'] as List).cast<String>(),
+    inputs: (j['inputs'] as List)
+        .map((e) => TriggerInput.fromJson(e))
+        .toList(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'name': name,
+    'description': description,
+    'icon': icon,
+    'color': color,
+    'platforms': platforms,
+    'inputs': inputs.map((e) => e.toJson()).toList(),
+  };
+}
+
+/// Valid trigger types. Mirrors the `Trigger.type` Literal in backend
+/// models.py — keep the two in sync.
+const List<String> kTriggerTypes = [
+  'hotkey',
+  'schedule',
+  'file_watch',
+  'directory_watch',
+  'app_open',
+  'app_close',
+  'clipboard',
+  'network',
+  'idle',
+  'startup',
+  'manual',
+];
+
 class Trigger {
-  final String
-  type; // "hotkey", "schedule", "file_watch", "directory_watch", "app_open", "app_close", "clipboard", "network", "idle", "startup", "manual"
+  final String type; // one of kTriggerTypes
   final Map<String, dynamic> config;
 
   Trigger({required this.type, this.config = const {}});

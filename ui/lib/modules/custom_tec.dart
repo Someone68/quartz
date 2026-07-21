@@ -230,11 +230,13 @@ class CustomTextField extends StatefulWidget {
     required this.value,
     required this.onChanged,
     this.decoration = const InputDecoration(isDense: true),
+    this.maxLength,
   });
 
   final String value;
   final ValueChanged<String> onChanged;
   final InputDecoration decoration;
+  final int? maxLength;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -279,6 +281,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       focusNode: _focusNode,
       decoration: widget.decoration,
       maxLines: null,
+      maxLength: widget.maxLength,
       onChanged: (_) => widget.onChanged(_controller.rawText),
     );
   }
