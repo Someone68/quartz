@@ -453,12 +453,12 @@ class EditorPageState extends State<EditorPage> {
       if (step is IfStep) {
         final childDepth = depth + 1;
         widgets
-          ..add(_branchHeader(context, 'THEN', childDepth))
+          ..add(_branchHeader(context, 'Then', childDepth))
           ..addAll(
             _renderIds(context, byId, step.then, childDepth, '${step.id}:then'),
           )
           ..add(_addActionButton(context, childDepth, step.then))
-          ..add(_branchHeader(context, 'ELSE', childDepth))
+          ..add(_branchHeader(context, 'Else', childDepth))
           ..addAll(
             _renderIds(
               context,
@@ -473,7 +473,7 @@ class EditorPageState extends State<EditorPage> {
       } else if (step is LoopStep) {
         final childDepth = depth + 1;
         widgets
-          ..add(_branchHeader(context, 'LOOP', childDepth))
+          ..add(_branchHeader(context, 'Loop', childDepth))
           ..addAll(
             _renderIds(
               context,
@@ -488,7 +488,7 @@ class EditorPageState extends State<EditorPage> {
       } else if (step is RepeatStep) {
         final childDepth = depth + 1;
         widgets
-          ..add(_branchHeader(context, 'REPEAT', childDepth))
+          ..add(_branchHeader(context, 'Repeat', childDepth))
           ..addAll(
             _renderIds(
               context,
@@ -602,11 +602,14 @@ class EditorPageState extends State<EditorPage> {
           ),
           child: Text(
             text,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.0,
-              color: Theme.of(context).colorScheme.onSecondaryContainer,
-            ),
+            style: Theme.of(context)
+                .extension<AppTextThemes>()!
+                .mono
+                .labelMedium
+                ?.copyWith(
+                  // letterSpacing: 1.0,
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
           ),
         ),
       ),
@@ -627,9 +630,13 @@ class EditorPageState extends State<EditorPage> {
           ),
           child: Text(
             label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
-            ),
+            style: Theme.of(context)
+                .extension<AppTextThemes>()!
+                .mono
+                .labelMedium
+                ?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
+                ),
           ),
         ),
       ),
