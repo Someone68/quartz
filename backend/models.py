@@ -179,9 +179,6 @@ class TriggerDef(BaseModel):
     outputs: list[TriggerOutput]
 
     make_listener: Callable = Field(exclude=True)
-    # Best-effort current output values for a manual run (no real fire event).
-    # Given the trigger config, returns a partial trigger-meta payload.
-    sample: Callable = Field(default=lambda config: {}, exclude=True)
 
     model_config = {"arbitrary_types_allowed": True}
 

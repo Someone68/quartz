@@ -19,5 +19,4 @@ TRIGGER = TriggerDef(
     inputs=[TriggerInput(name="poll_interval", type="number", label="Poll interval (s)", default=1.0)],
     outputs=[TriggerOutput(name="content", type="string", label="Clipboard content")],
     make_listener=lambda config, fire: ClipboardListener(config, fire),
-    sample=lambda config: {"content": pyperclip.paste()},
 )

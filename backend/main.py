@@ -92,15 +92,7 @@ def run_shortcut(shortcut_id: str):
     s = storage.load_shortcut(shortcut_id)
     if not s:
         raise HTTPException(404, "Shortcut not found")
-    # No real fire event on a manual run — seed trigger outputs from the
-    # trigger's live sample so {{trigger.*}} refs resolve while testing.
-    meta = {"type": s.trigger.type}
-    try:
-        td = trigger_registry.get(s.trigger.type)
-        meta.update(td.sample(s.trigger.config) or {})
-    except Exception:
-        pass
-    run = executor.run_shortcut(s, trigger_meta=meta)
+    run = executor.run_shortcut(s, trigger_meta={"type": "manual"})
     return run
 
 

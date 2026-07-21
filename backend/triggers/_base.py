@@ -39,4 +39,7 @@ class PollingListener:
                 self.poll()
             except Exception as e:
                 print(f"Error in poll: {e}")
+            # Wait between polls instead of busy-looping. _stop.wait returns
+            # early when stop() is called, so shutdown stays responsive.
+            self._stop.wait(self.interval)
         self.teardown()

@@ -31,13 +31,7 @@ def resolve(value: Any, context: dict) -> Any:
         return value
     try:
         template = _jinja.from_string(value)
-        result = template.render(**context)
-        # A missing ref (e.g. {{trigger.x}} on a manual run) renders to a jinja
-        # Undefined object. Collapse it to None so downstream code and JSON
-        # serialization see a clean value instead of a leaked sentinel.
-        if isinstance(result, Undefined):
-            return None
-        return result
+        return template.render(**context)
     except Exception:
         return value
 
