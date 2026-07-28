@@ -236,6 +236,14 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
           onChanged: (v) => set(num.tryParse(v)),
         );
         break;
+      case 'datetime':
+        field = TimePickerField(
+          // Config stores an ISO-8601 string so the shortcut stays
+          // JSON-encodable; a raw DateTime breaks jsonEncode on save.
+          initial: value != null ? TimeOfDay.fromDateTime(DateTime.parse(value)) : null,
+          onChanged: (dt) => set(dt.toIso8601String()),
+        );
+        break;
       default: // string, path, template, dynamic, unknown
         field = CustomTextField(
           key: ValueKey(input.name),

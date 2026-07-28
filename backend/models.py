@@ -8,7 +8,14 @@ from pydantic import BaseModel, Field, field_validator
 class ActionInput(BaseModel):
     name: str
     type: Literal[
-        "string", "number", "boolean", "path", "choice", "template", "dynamic"
+        "string",
+        "number",
+        "boolean",
+        "path",
+        "choice",
+        "template",
+        "dynamic",
+        "datetime",
     ]
     label: str
     required: bool = False
@@ -121,7 +128,14 @@ Step = Annotated[
 class TriggerInput(BaseModel):
     name: str
     type: Literal[
-        "string", "number", "boolean", "path", "choice", "template", "dynamic"
+        "string",
+        "number",
+        "boolean",
+        "path",
+        "choice",
+        "template",
+        "dynamic",
+        "datetime",
     ]
     label: str
     required: bool = False
@@ -130,10 +144,12 @@ class TriggerInput(BaseModel):
     min: float | None = None
     max: float | None = None
 
+
 class TriggerOutput(BaseModel):
     name: str
     type: Literal["string", "number", "boolean", "path", "list"]
     label: str
+
 
 new_id = lambda: str(uuid4())
 
@@ -144,6 +160,7 @@ class Trigger(BaseModel):
         "hotkey",
         "schedule",
         "file_watch",
+        "directory_contents_watch",
         "directory_watch",
         "app_open",
         "app_close",
@@ -161,6 +178,7 @@ class TriggerDef(BaseModel):
         "hotkey",
         "schedule",
         "file_watch",
+        "directory_contents_watch",
         "directory_watch",
         "app_open",
         "app_close",

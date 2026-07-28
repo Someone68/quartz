@@ -278,3 +278,52 @@ class TinyChipButton extends StatelessWidget {
     );
   }
 }
+
+class TimePickerField extends StatefulWidget {
+  final TimeOfDay? initial;
+  final ValueChanged<DateTime>? onChanged;
+  const TimePickerField({super.key, this.initial, this.onChanged});
+
+  @override
+  State<TimePickerField> createState() => _TimePickerFieldState();
+}
+
+class _TimePickerFieldState extends State<TimePickerField> {
+  TimeOfDay? _time;
+
+  @override
+  void initState() {
+    super.initState();
+    _time = widget.initial;
+  }
+
+  DateTime _toDateTime(TimeOfDay t) {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day, t.hour, t.minute);
+  }
+
+  Future<void> _pick() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _time ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() => _time = picked);
+      widget.onChanged?.call(_toDateTime(picked)); // DateTime, not TimeOfDay
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: _pick,
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          suffixIcon: Icon(Icons.access_time),
+          border: OutlineInputBorder(),
+        ),
+        child: Text(_time != null ? _time!.format(context) : 'Select time'),
+      ),
+    );
+  }
+}

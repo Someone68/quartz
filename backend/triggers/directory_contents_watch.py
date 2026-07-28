@@ -4,9 +4,9 @@ from models import TriggerDef, TriggerInput, TriggerOutput
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-# Editors (nano, vim, etc.) save atomically: write temp + rename + metadata
-# flush, which emits multiple modified events for one logical edit. Coalesce
-# events on the same path within this window into a single fire.
+# Editors save atomically (write temp + rename + metadata flush), emitting
+# multiple modified events per logical edit. Coalesce same-path events within
+# this window into a single fire.
 _DEBOUNCE_SECONDS = 0.5
 
 
@@ -16,9 +16,7 @@ class _Handler(FileSystemEventHandler):
         self._last = {}
 
     def on_modified(self, event):
-        # Content changes only. Skip directory events and non-content
-        # event types (created/deleted/moved/attribute) so a single edit
-        # doesn't multi-fire the trigger.
+        # Content changes only. Skip dirs and structural events.
         if event.is_directory:
             return
         now = time.monotonic()
@@ -35,7 +33,7 @@ class _Handler(FileSystemEventHandler):
         )
 
 
-class FileWatchListener:
+class FileContentWatchListener:
     def __init__(self, config, fire):
         self.config, self.fire = config, fire
         self._obs = Observer()
@@ -44,7 +42,7 @@ class FileWatchListener:
         self._obs.schedule(
             _Handler(self.fire),
             self.config["path"],
-            recursive=self.config.get("recursive", False),
+            recursive=self.config.get("recursive", True),
         )
         self._obs.start()
 
@@ -54,21 +52,19 @@ class FileWatchListener:
 
 
 TRIGGER = TriggerDef(
-    type="file_watch",
-    name="File Watch",
-    icon="folder",
-    description="Triggers on changes to a file in a path",
-    color="blue",
+    type="directory_contents_watch",
+    name="Directory Content Watch",
+    icon="file-text",
+    description="Triggers on file content changes within a directory",
+    color="green",
     platforms=["linux", "windows"],
     inputs=[
-        TriggerInput(name="path", type="path", label="Path", required=True),
-        TriggerInput(
-            name="recursive", type="boolean", label="Recursive", default=False
-        ),
+        TriggerInput(name="path", type="path", label="Directory", required=True),
+        TriggerInput(name="recursive", type="boolean", label="Recursive", default=True),
     ],
     outputs=[
         TriggerOutput(name="event_type", type="string", label="Event type"),
         TriggerOutput(name="path", type="path", label="Path"),
     ],
-    make_listener=lambda config, fire: FileWatchListener(config, fire),
+    make_listener=lambda config, fire: FileContentWatchListener(config, fire),
 )

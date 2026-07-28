@@ -16,9 +16,6 @@ class _Handler(FileSystemEventHandler):
         self._last = {}
 
     def on_modified(self, event):
-        # Content changes only. Skip directory events and non-content
-        # event types (created/deleted/moved/attribute) so a single edit
-        # doesn't multi-fire the trigger.
         if event.is_directory:
             return
         now = time.monotonic()
@@ -31,6 +28,37 @@ class _Handler(FileSystemEventHandler):
             {
                 "event_type": event.event_type,
                 "path": event.src_path,
+            }
+        )
+
+    def on_created(self, event):
+        if event.is_directory:
+            return
+        self.fire(
+            {
+                "event_type": event.event_type,  # 'created'
+                "path": event.src_path,
+            }
+        )
+
+    def on_deleted(self, event):
+        if event.is_directory:
+            return
+        self.fire(
+            {
+                "event_type": event.event_type,  # 'deleted'
+                "path": event.src_path,
+            }
+        )
+
+    def on_moved(self, event):
+        if event.is_directory:
+            return
+        self.fire(
+            {
+                "event_type": event.event_type,  # 'moved' (rename)
+                "path": event.src_path,  # old path
+                "dest_path": event.dest_path,  # new path
             }
         )
 
@@ -54,11 +82,11 @@ class FileWatchListener:
 
 
 TRIGGER = TriggerDef(
-    type="file_watch",
-    name="File Watch",
+    type="directory_watch",
+    name="Directory Watch",
     icon="folder",
-    description="Triggers on changes to a file in a path",
-    color="blue",
+    description="Triggers on files added/removed/renamed in a directory in a path",
+    color="cyan",
     platforms=["linux", "windows"],
     inputs=[
         TriggerInput(name="path", type="path", label="Path", required=True),
@@ -69,6 +97,7 @@ TRIGGER = TriggerDef(
     outputs=[
         TriggerOutput(name="event_type", type="string", label="Event type"),
         TriggerOutput(name="path", type="path", label="Path"),
+        TriggerOutput(name="dest_path", type="path", label="Destination path"),
     ],
     make_listener=lambda config, fire: FileWatchListener(config, fire),
 )

@@ -206,6 +206,14 @@ class InspectorPanelState extends State<InspectorPanel> {
           onChanged: set,
         );
         break;
+      case 'datetime':
+        field = TimePickerField(
+          // Config stores an ISO-8601 string so the shortcut stays
+          // JSON-encodable; a raw DateTime breaks jsonEncode on save.
+          initial: value != null ? TimeOfDay.fromDateTime(DateTime.parse(value)) : null,
+          onChanged: (dt) => set(dt.toIso8601String()),
+        );
+        break;
       default: // string, path, template, and anything unknown
         field = CustomTextField(
           key: ValueKey(input.name),

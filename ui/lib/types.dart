@@ -593,7 +593,8 @@ class StopStep extends Step {
 
 class TriggerInput {
   final String name;
-  final String type; // string, number, boolean, path, choice, template, dynamic
+  final String
+  type; // string, number, boolean, path, choice, template, dynamic, datetime
   final String label;
   final bool required;
   final dynamic default_;
@@ -702,6 +703,7 @@ const List<String> kTriggerTypes = [
   'schedule',
   'file_watch',
   'directory_watch',
+  'directory_contents_watch',
   'app_open',
   'app_close',
   'clipboard',
