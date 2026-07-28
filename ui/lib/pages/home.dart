@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ui/requests.dart';
-import 'package:ui/types.dart';
-import 'package:ui/modules/shortcut_card.dart';
+import 'package:quartz/requests.dart';
+import 'package:quartz/types.dart';
+import 'package:quartz/modules/shortcut_card.dart';
 
 /// Shortcuts list — the landing page. Placeholder until shortcut storage and
 /// the list/grid view are wired up.

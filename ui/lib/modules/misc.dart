@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/iconname_to_unicode_map.dart';
-import 'package:ui/requests.dart';
+import 'package:quartz/requests.dart';
 
 Container buildStyledIcon(
   BuildContext context,

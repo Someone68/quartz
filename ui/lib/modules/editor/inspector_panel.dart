@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
-import 'package:ui/extensions.dart';
-import 'package:ui/modules/custom_tec.dart';
-import 'package:ui/modules/misc.dart';
-import 'package:ui/types.dart';
+import 'package:quartz/extensions.dart';
+import 'package:quartz/modules/custom_tec.dart';
+import 'package:quartz/modules/misc.dart';
+import 'package:quartz/types.dart';
 
 class InspectorPanel extends StatefulWidget {
   /// Schema for the selected step's action (null when nothing selected or the

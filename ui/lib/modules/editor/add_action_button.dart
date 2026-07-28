@@ -1,8 +1,8 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart' hide Step;
-import 'package:ui/modules/action_libary.dart';
-import 'package:ui/modules/editor/step_defs.dart';
-import 'package:ui/types.dart';
+import 'package:quartz/modules/action_libary.dart';
+import 'package:quartz/modules/editor/step_defs.dart';
+import 'package:quartz/types.dart';
 
 class AddActionButton extends StatelessWidget {
   final ValueChanged<ActionSummary>? onActionSelected;

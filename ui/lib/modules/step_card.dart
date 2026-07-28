@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart' hide Step;
-import 'package:ui/color_map.dart';
-import 'package:ui/extensions.dart';
-import 'package:ui/modules/misc.dart';
-import 'package:ui/types.dart';
+import 'package:quartz/color_map.dart';
+import 'package:quartz/extensions.dart';
+import 'package:quartz/modules/misc.dart';
+import 'package:quartz/types.dart';
 
 class StepCard extends StatelessWidget {
   final IconData icon;

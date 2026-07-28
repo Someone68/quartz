@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ui/modules/misc.dart';
-import 'package:ui/requests.dart';
-import 'package:ui/types.dart';
+import 'package:quartz/modules/misc.dart';
+import 'package:quartz/requests.dart';
+import 'package:quartz/types.dart';
 
 class _HoverCard extends StatefulWidget {
   final VoidCallback onTap;

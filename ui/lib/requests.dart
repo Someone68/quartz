@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:ui/types.dart';
+import 'package:quartz/types.dart';
 
 /// POST a shortcut. Backend mints an id on create and echoes the stored
 /// shortcut back; we parse and return it so callers pick up the id.

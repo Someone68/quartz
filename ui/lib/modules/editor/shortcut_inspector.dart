@@ -3,10 +3,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
-import 'package:ui/extensions.dart';
-import 'package:ui/modules/custom_tec.dart';
-import 'package:ui/modules/misc.dart';
-import 'package:ui/types.dart';
+import 'package:quartz/extensions.dart';
+import 'package:quartz/modules/custom_tec.dart';
+import 'package:quartz/modules/misc.dart';
+import 'package:quartz/types.dart';
 
 class ShortcutInspector extends StatefulWidget {
   final Shortcut shortcut;

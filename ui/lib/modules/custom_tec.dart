@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ui/extensions.dart';
+import 'package:quartz/extensions.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class CustomTextEditingController extends TextEditingController {

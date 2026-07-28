@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:ui/types.dart';
+import 'package:quartz/types.dart';
 
 // Full action definitions from the backend-written cache at
 // ~/.config/quartz/actions_cache.json (includes input/output schema).

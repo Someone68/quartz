@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
-import 'package:ui/color_map.dart';
-import 'package:ui/extensions.dart';
-import 'package:ui/modules/drop_line.dart';
-import 'package:ui/modules/editor/add_action_button.dart';
-import 'package:ui/modules/editor/drag_handle.dart';
-import 'package:ui/modules/editor/inspector_panel.dart';
-import 'package:ui/modules/editor/shortcut_inspector.dart';
-import 'package:ui/modules/editor/step_defs.dart';
-import 'package:ui/modules/misc.dart';
-import 'package:ui/modules/resizable_container.dart';
-import 'package:ui/modules/step_card.dart';
-import 'package:ui/requests.dart';
-import 'package:ui/types.dart';
+import 'package:quartz/color_map.dart';
+import 'package:quartz/extensions.dart';
+import 'package:quartz/modules/drop_line.dart';
+import 'package:quartz/modules/editor/add_action_button.dart';
+import 'package:quartz/modules/editor/drag_handle.dart';
+import 'package:quartz/modules/editor/inspector_panel.dart';
+import 'package:quartz/modules/editor/shortcut_inspector.dart';
+import 'package:quartz/modules/editor/step_defs.dart';
+import 'package:quartz/modules/misc.dart';
+import 'package:quartz/modules/resizable_container.dart';
+import 'package:quartz/modules/step_card.dart';
+import 'package:quartz/requests.dart';
+import 'package:quartz/types.dart';
 
 /// Shortcut editor — trigger + step list. Placeholder until the builder UI
 /// lands.
