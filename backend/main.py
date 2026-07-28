@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+import config
 import executor
 import registry
 import storage
@@ -17,6 +18,8 @@ class RenameRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    cfg = config.get_config()
+    print(f"Config loaded from {config.CONFIG_PATH}")
     print("Loading actions...")
     registry.load_all()
     print(f"Loaded {len(registry.all_actions())} actions.")
@@ -109,6 +112,17 @@ def get_run(shortcut_id: str, run_id: str):
     return run
 
 
+@app.get("/config")
+def get_config():
+    return config.get_config()
+
+
+@app.put("/config")
+def update_config(cfg: config.AppConfig):
+    config.save_config(cfg)
+    return config.reload_config()
+
+
 @app.get("/actions")
 def list_actions():
     return registry.all_actions_by_category()
@@ -122,4 +136,11 @@ def list_triggers():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8757, reload=True)
+    cfg = config.get_config()
+    uvicorn.run(
+        "main:app",
+        host=cfg.host,
+        port=cfg.port,
+        log_level=cfg.log_level,
+        reload=True,
+    )
