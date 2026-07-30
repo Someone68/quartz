@@ -107,18 +107,8 @@ class InspectorPanelState extends State<InspectorPanel> {
                             runSpacing: 8.0,
                             children: [
                               for (var output in widget.def!.outputs) ...[
-                                Tooltip(
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainerHigh,
-                                    borderRadius: BorderRadius.circular(4.0),
-                                  ),
-                                  textStyle: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
-                                  ),
+                                buildStyledTooltip(
+                                  context: context,
                                   message:
                                       "\"${output.name}\" is of type \"${output.type}\".\nYou can reference this output using {{steps.${widget.step!.id}.${output.name}}} (click to copy)",
                                   child: TinyChipButton(
@@ -210,7 +200,9 @@ class InspectorPanelState extends State<InspectorPanel> {
         field = TimePickerField(
           // Config stores an ISO-8601 string so the shortcut stays
           // JSON-encodable; a raw DateTime breaks jsonEncode on save.
-          initial: value != null ? TimeOfDay.fromDateTime(DateTime.parse(value)) : null,
+          initial: value != null
+              ? TimeOfDay.fromDateTime(DateTime.parse(value))
+              : null,
           onChanged: (dt) => set(dt.toIso8601String()),
         );
         break;
@@ -229,19 +221,10 @@ class InspectorPanelState extends State<InspectorPanel> {
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      input.label,
-                      style: Theme.of(context).textTheme.labelMedium,
-                    ),
-                    Text(
-                      input.required ? ' *' : '',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
+                InputLabelRow(
+                  label: input.label,
+                  required: input.required,
+                  tooltip: input.tooltip,
                 ),
                 const SizedBox(height: 4),
                 field,
@@ -251,19 +234,11 @@ class InspectorPanelState extends State<InspectorPanel> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      input.label,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    Text(
-                      input.required ? ' *' : '',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
+                InputLabelRow(
+                  label: input.label,
+                  required: input.required,
+                  tooltip: input.tooltip,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(width: 8),
                 field,

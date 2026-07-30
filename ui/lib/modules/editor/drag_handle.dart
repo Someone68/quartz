@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide Step;
+import 'package:quartz/modules/misc.dart';
 
 class DragHandle extends StatelessWidget {
   final BuildContext context;
@@ -45,14 +46,10 @@ class DragHandle extends StatelessWidget {
           cursor: id == stepId
               ? SystemMouseCursors.grabbing
               : SystemMouseCursors.grab,
-          child: Tooltip(
+          child: buildStyledTooltip(
+            context: context,
             message: "Drag to reorder",
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(8),
-            ),
             waitDuration: Duration(milliseconds: 750),
-            textStyle: Theme.of(context).textTheme.bodyMedium,
             child: Icon(Icons.drag_handle),
           ),
         ),

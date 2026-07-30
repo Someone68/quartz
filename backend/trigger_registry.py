@@ -1,6 +1,6 @@
 import importlib.util
-from pathlib import Path
 
+import paths
 import storage
 from models import TriggerDef
 
@@ -8,7 +8,7 @@ _registry: dict[str, TriggerDef] = {}
 
 
 def load_all():
-    triggers_dir = Path(__file__).parent / "triggers"
+    triggers_dir = paths.TRIGGERS_DIR
     for path in sorted(triggers_dir.glob("*.py")):
         if path.name.startswith("_"):
             continue

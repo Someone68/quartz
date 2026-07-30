@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/iconname_to_unicode_map.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:quartz/requests.dart';
 
 Container buildStyledIcon(
@@ -218,6 +219,50 @@ void runShortcutWithLog(BuildContext context, String shortcutId) {
       });
 }
 
+/// Label + required marker + optional help tooltip for one inspector field.
+/// Shared so action inputs and trigger inputs stay identical; both inspectors
+/// use it for every field type, including booleans.
+class InputLabelRow extends StatelessWidget {
+  final String label;
+  final bool required;
+  final String? tooltip;
+  final TextStyle? style;
+
+  const InputLabelRow({
+    super.key,
+    required this.label,
+    this.required = false,
+    this.tooltip,
+    this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tip = tooltip;
+    return Row(
+      children: [
+        Text(label, style: style ?? Theme.of(context).textTheme.labelMedium),
+        if (required)
+          Text(
+            ' *',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        if (tip != null && tip.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: buildStyledTooltip(
+              context: context,
+              message: tip,
+              child: const Icon(Symbols.help, size: 16),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class TinyChip extends StatelessWidget {
   final String label;
   final Color color;
@@ -326,4 +371,28 @@ class _TimePickerFieldState extends State<TimePickerField> {
       ),
     );
   }
+}
+
+Widget buildStyledTooltip({
+  required String message,
+  required Widget child,
+  TextStyle? textStyle,
+  Decoration? decoration,
+  Duration? waitDuration,
+  required BuildContext context,
+}) {
+  return Tooltip(
+    decoration:
+        decoration ??
+        BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(4.0),
+        ),
+    textStyle:
+        textStyle ?? TextStyle(color: Theme.of(context).colorScheme.onSurface),
+    richMessage: message.isNotEmpty ? TextSpan(text: message) : null,
+    constraints: BoxConstraints(maxWidth: 400),
+    child: child,
+    waitDuration: waitDuration,
+  );
 }

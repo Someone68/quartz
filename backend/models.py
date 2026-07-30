@@ -21,6 +21,8 @@ class ActionInput(BaseModel):
     required: bool = False
     default: Any = None
     options: list[str] | None = None
+    tooltip: str | None = None
+    requires: dict[str, Any] | None = None
     min: float | None = None
     max: float | None = None
 
@@ -141,6 +143,7 @@ class TriggerInput(BaseModel):
     required: bool = False
     default: Any = None
     options: list[str] | None = None
+    tooltip: str | None = None
     min: float | None = None
     max: float | None = None
 

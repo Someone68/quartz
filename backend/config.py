@@ -14,7 +14,10 @@ class AppConfig(BaseModel):
     missing keys fall back to the default automatically.
     """
 
-    host: str = "0.0.0.0"
+    # Loopback only. The API is unauthenticated and can run arbitrary shell
+    # commands, so binding a routable address exposes the machine to anyone
+    # on the network. Do not widen this without adding auth.
+    host: str = "127.0.0.1"
     port: int = 8757
     log_level: str = "info"
     # How many run logs to keep per shortcut (0 = unlimited).
@@ -41,6 +44,13 @@ def load_config() -> AppConfig:
         cfg = AppConfig()
     # Write back so the file exists and gains any newly-added default keys.
     save_config(cfg)
+    if cfg.host not in ("127.0.0.1", "localhost", "::1"):
+        print(
+            f"WARNING: host is {cfg.host!r}, not loopback. The API has no "
+            f"authentication and can run shell commands, so anyone who can "
+            f"reach this machine can control it. Set host to 127.0.0.1 in "
+            f"{CONFIG_PATH}."
+        )
     return cfg
 
 

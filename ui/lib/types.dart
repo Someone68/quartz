@@ -13,6 +13,7 @@ class ActionInput {
   final List<String>? options;
   final double? min;
   final double? max;
+  final String? tooltip;
 
   ActionInput({
     required this.name,
@@ -23,6 +24,7 @@ class ActionInput {
     this.options,
     this.min,
     this.max,
+    this.tooltip,
   });
 
   factory ActionInput.fromJson(Map<String, dynamic> j) => ActionInput(
@@ -34,6 +36,7 @@ class ActionInput {
     options: (j['options'] as List?)?.cast<String>(),
     min: (j['min'] as num?)?.toDouble(),
     max: (j['max'] as num?)?.toDouble(),
+    tooltip: j['tooltip'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -45,6 +48,7 @@ class ActionInput {
     'options': options,
     'min': min,
     'max': max,
+    'tooltip': tooltip,
   };
 }
 
@@ -601,6 +605,7 @@ class TriggerInput {
   final List<String>? options;
   final double? min;
   final double? max;
+  final String? tooltip;
 
   TriggerInput({
     required this.name,
@@ -611,6 +616,7 @@ class TriggerInput {
     this.options,
     this.min,
     this.max,
+    this.tooltip,
   });
 
   factory TriggerInput.fromJson(Map<String, dynamic> j) => TriggerInput(
@@ -622,6 +628,7 @@ class TriggerInput {
     options: (j['options'] as List?)?.cast<String>(),
     min: (j['min'] as num?)?.toDouble(),
     max: (j['max'] as num?)?.toDouble(),
+    tooltip: j['tooltip'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -633,6 +640,7 @@ class TriggerInput {
     'options': options,
     'min': min,
     'max': max,
+    'tooltip': tooltip,
   };
 }
 

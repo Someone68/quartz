@@ -2,12 +2,12 @@ from contextlib import asynccontextmanager
 
 import config
 import executor
+import paths
 import registry
 import storage
 import trigger_manager
 import trigger_registry
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from models import Shortcut
 from pydantic import BaseModel
 
@@ -34,12 +34,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Quartz Backend", lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# No CORS middleware on purpose: the Flutter desktop client uses dart:io and
+# is not subject to CORS, while a permissive policy would let any website the
+# user visits drive this API from their browser.
 
 
 @app.get("/shortcuts")
@@ -137,10 +134,12 @@ if __name__ == "__main__":
     import uvicorn
 
     cfg = config.get_config()
+    # A frozen build has no importable "main" module and cannot fork a
+    # reloader child, so hand uvicorn the app object and keep reload off.
     uvicorn.run(
-        "main:app",
+        app if paths.IS_FROZEN else "main:app",
         host=cfg.host,
         port=cfg.port,
         log_level=cfg.log_level,
-        reload=True,
+        reload=not paths.IS_FROZEN,
     )

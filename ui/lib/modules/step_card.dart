@@ -66,7 +66,7 @@ class StepCard extends StatelessWidget {
       // Wrap in a Tooltip only when a description exists; Tooltip asserts a
       // non-null message.
       child: (desc != null && desc.isNotEmpty)
-          ? Tooltip(message: desc, child: card)
+          ? buildStyledTooltip(context: context, message: desc, child: card)
           : card,
     );
   }

@@ -71,7 +71,8 @@ class _ActionLibraryState extends State<ActionLibrary> {
               child: ListView.builder(
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
-                  return Tooltip(
+                  return buildStyledTooltip(
+                    context: context,
                     message: filtered[index].description,
                     child: ListTile(
                       leading: buildStyledIcon(

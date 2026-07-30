@@ -149,16 +149,8 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
                       runSpacing: 8.0,
                       children: [
                         for (var output in def!.outputs) ...[
-                          Tooltip(
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHigh,
-                              borderRadius: BorderRadius.circular(4.0),
-                            ),
-                            textStyle: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                          buildStyledTooltip(
+                            context: context,
                             message:
                                 "\"${output.name}\" is of type \"${output.type}\".\nYou can reference this output using {{trigger.${output.name}}} (click to copy)",
                             child: TinyChipButton(
@@ -240,7 +232,9 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
         field = TimePickerField(
           // Config stores an ISO-8601 string so the shortcut stays
           // JSON-encodable; a raw DateTime breaks jsonEncode on save.
-          initial: value != null ? TimeOfDay.fromDateTime(DateTime.parse(value)) : null,
+          initial: value != null
+              ? TimeOfDay.fromDateTime(DateTime.parse(value))
+              : null,
           onChanged: (dt) => set(dt.toIso8601String()),
         );
         break;
@@ -258,19 +252,10 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      input.label,
-                      style: Theme.of(context).textTheme.labelMedium,
-                    ),
-                    Text(
-                      input.required ? ' *' : '',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
+                InputLabelRow(
+                  label: input.label,
+                  required: input.required,
+                  tooltip: input.tooltip,
                 ),
                 const SizedBox(height: 4),
                 field,
@@ -279,8 +264,10 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
           : Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  input.label,
+                InputLabelRow(
+                  label: input.label,
+                  required: input.required,
+                  tooltip: input.tooltip,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(width: 8),

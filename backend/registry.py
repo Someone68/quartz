@@ -1,6 +1,6 @@
 import importlib.util
-from pathlib import Path
 
+import paths
 import storage
 from models import ActionDef
 
@@ -8,7 +8,7 @@ _registry: dict[str, ActionDef] = {}
 
 
 def load_all():
-    actions_dir = Path(__file__).parent / "actions"
+    actions_dir = paths.ACTIONS_DIR
     for path in sorted(actions_dir.rglob("*.py")):
         if path.name.startswith("_"):
             continue
