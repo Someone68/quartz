@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/iconname_to_unicode_map.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:quartz/modules/app_picker.dart';
 import 'package:quartz/requests.dart';
+import 'package:quartz/types.dart';
 
 Container buildStyledIcon(
   BuildContext context,
@@ -394,5 +396,42 @@ Widget buildStyledTooltip({
     constraints: BoxConstraints(maxWidth: 400),
     child: child,
     waitDuration: waitDuration,
+  );
+}
+
+/// Show the installed-app list in a bottom sheet and return the app the user
+/// picked, or null if they dismissed the sheet.
+///
+/// The sheet is scroll-controlled and given an explicit height because
+/// [AppPicker] puts its list in an [Expanded], which needs a bounded box.
+Future<AppEntry?> showAppPicker(
+  BuildContext context, {
+  int port = 8757,
+  double heightFactor = 0.7,
+  Function(AppEntry)? onSelect,
+}) {
+  return showModalBottomSheet<AppEntry>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (sheetContext) => Padding(
+      // Keep the search field clear of the on-screen keyboard / IME panel.
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+      ),
+      child: SizedBox(
+        height: MediaQuery.of(sheetContext).size.height * heightFactor,
+        child: AppPicker(
+          port: port,
+          onSelect: (app) {
+            Navigator.pop(sheetContext, app);
+            onSelect?.call(app);
+          },
+        ),
+      ),
+    ),
   );
 }

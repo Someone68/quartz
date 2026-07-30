@@ -32,7 +32,7 @@ TRIGGER = TriggerDef(
     description="Triggers when an application is closed",
     color="blue",
     platforms=["linux", "windows"],
-    inputs=[TriggerInput(type="string", name="app", label="App Name", required=True)],
+    inputs=[TriggerInput(type="app", name="app", label="App", required=True, tooltip="The application to trigger on. Will work for most applications.")],
     outputs=[],
     make_listener=lambda config, fire: AppListener(config, fire),
 )

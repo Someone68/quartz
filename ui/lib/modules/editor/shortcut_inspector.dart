@@ -238,6 +238,13 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
           onChanged: (dt) => set(dt.toIso8601String()),
         );
         break;
+      case 'app':
+        field = ActionChip(
+          label: Text(value?.toString() ?? 'Choose App'),
+          onPressed: () =>
+              showAppPicker(context, onSelect: (app) => set(app.name)),
+        );
+        break;
       default: // string, path, template, dynamic, unknown
         field = CustomTextField(
           key: ValueKey(input.name),

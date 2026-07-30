@@ -1,4 +1,7 @@
 //ported by claude
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
@@ -6,7 +9,8 @@ String newId() => const Uuid().v4();
 
 class ActionInput {
   final String name;
-  final String type; // string, number, boolean, path, choice, template
+  final String
+  type; // string, number, boolean, path, choice, template, datetime, app
   final String label;
   final bool required;
   final dynamic default_;
@@ -987,4 +991,18 @@ class ActionSummary {
     required this.color,
     required this.platforms,
   });
+}
+
+class AppEntry {
+  final String name;
+  final String launch;
+  final String nameLower; // precomputed for search
+  final Uint8List? icon; // decoded once, not per build
+
+  AppEntry(this.name, this.launch, String? iconB64)
+    : nameLower = name.toLowerCase(),
+      icon = iconB64 != null ? base64Decode(iconB64) : null;
+
+  factory AppEntry.fromJson(Map<String, dynamic> j) =>
+      AppEntry(j['name'], j['launch'], j['icon_b64']);
 }

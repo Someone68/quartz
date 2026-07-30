@@ -8,3 +8,8 @@ watchdog
 psutil
 pyperclip
 croniter
+pillow
+
+pyxdg; sys_platform == "linux"
+cairosvg; sys_platform == "linux"
+pywin32; sys_platform == "win32"

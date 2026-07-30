@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
+import sys
 
+from get_apps import load_linux_apps, load_windows_apps
 import config
 import executor
 import paths
@@ -129,6 +131,11 @@ def list_actions():
 def list_triggers():
     return trigger_registry.all_triggers()
 
+
+
+@app.get("/apps")
+def list_apps():
+    return {"apps": load_windows_apps() if sys.platform == 'win32' else load_linux_apps()}
 
 if __name__ == "__main__":
     import uvicorn

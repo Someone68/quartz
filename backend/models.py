@@ -16,6 +16,7 @@ class ActionInput(BaseModel):
         "template",
         "dynamic",
         "datetime",
+        "app",
     ]
     label: str
     required: bool = False
@@ -138,6 +139,7 @@ class TriggerInput(BaseModel):
         "template",
         "dynamic",
         "datetime",
+        "app",
     ]
     label: str
     required: bool = False

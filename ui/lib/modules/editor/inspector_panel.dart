@@ -206,6 +206,13 @@ class InspectorPanelState extends State<InspectorPanel> {
           onChanged: (dt) => set(dt.toIso8601String()),
         );
         break;
+      case 'app':
+        field = ActionChip(
+          label: Text(value?.toString() ?? 'Choose App'),
+          onPressed: () =>
+              showAppPicker(context, onSelect: (app) => set(app.name)),
+        );
+        break;
       default: // string, path, template, and anything unknown
         field = CustomTextField(
           key: ValueKey(input.name),
