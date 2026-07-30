@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
-import sys
 
-from get_apps import load_linux_apps, load_windows_apps
+import get_apps
+from get_apps import launch_by_name, load_apps
 import config
 import executor
 import paths
@@ -131,11 +131,16 @@ def list_actions():
 def list_triggers():
     return trigger_registry.all_triggers()
 
-
+@app.post("/launch-by-name")
+def launch_app_by_name(req: get_apps.LaunchByName):
+    try:
+        return launch_by_name(req.name)
+    except LookupError as e:
+        raise HTTPException(404, str(e))
 
 @app.get("/apps")
 def list_apps():
-    return {"apps": load_windows_apps() if sys.platform == 'win32' else load_linux_apps()}
+    return {"apps": load_apps()}
 
 if __name__ == "__main__":
     import uvicorn

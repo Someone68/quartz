@@ -1,5 +1,8 @@
+import subprocess
 import sys, base64, configparser, os
 from pathlib import Path
+
+from pydantic.main import BaseModel
 
 def _exe_icon_b64(exe: str):
     try:
@@ -110,3 +113,41 @@ def load_windows_apps():
             apps.append({'name': name, 'launch': target, 'icon_b64': _exe_icon_b64(target)})
     apps.sort(key=lambda a: a['name'].lower())
     return apps
+
+_APP_INDEX = {}  # name.lower() -> launch
+
+def _rebuild_index(apps):
+    _APP_INDEX.clear()
+    for a in apps:
+        _APP_INDEX[a['name'].lower()] = a['launch']
+
+def load_apps():
+    """Scan installed apps and refresh the name -> launch index."""
+    apps = load_windows_apps() if sys.platform == 'win32' else load_linux_apps()
+    _rebuild_index(apps)
+    return apps
+
+load_apps()
+
+class LaunchByName(BaseModel):
+    name: str
+
+def launch_by_name(name: str):
+    """Launch an app by its display name.
+
+    Takes a plain name so actions can call it directly; the HTTP route unwraps
+    its request model. Raises LookupError if no such app is installed.
+    """
+    launch = _APP_INDEX.get(name.lower())
+    if launch is None:
+        # The index is built at import, so an app installed since startup is
+        # missing. Rescan once before giving up.
+        load_apps()
+        launch = _APP_INDEX.get(name.lower())
+    if launch is None:
+        raise LookupError(f"no app named {name!r}")
+    if sys.platform == 'win32':
+        os.startfile(launch)
+    else:
+        subprocess.Popen(['/bin/sh', '-c', launch], start_new_session=True)
+    return {"ok": True}

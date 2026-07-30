@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/iconname_to_unicode_map.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:quartz/modules/app_picker.dart';
@@ -193,6 +194,15 @@ void runShortcutWithLog(BuildContext context, String shortcutId) {
               title: const Text('Run Failed'),
               content: Text('${log.status}: ${log.error}'),
               actions: [
+                TextButton(
+                  onPressed: () => {
+                    Clipboard.setData(
+                      ClipboardData(text: '${log.status}: ${log.error}'),
+                    ),
+                    Navigator.of(context).pop(),
+                  },
+                  child: const Text('Copy'),
+                ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('OK'),
