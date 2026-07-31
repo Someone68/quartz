@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quartz/extensions.dart';
-import 'package:quartz/modules/misc.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class CustomTextEditingController extends TextEditingController {
@@ -197,22 +196,6 @@ class _VarChip extends StatelessWidget {
     final theme = Theme.of(context);
     final (icon, text, ns) = _parse(path);
 
-    return buildStyledTooltip(
-      context: context,
-      // The label ellipsizes when it can't fit, so keep the full reference
-      // reachable on hover.
-      message: '{{$path}}',
-      child: _chip(context, theme, icon, text, ns),
-    );
-  }
-
-  Widget _chip(
-    BuildContext context,
-    ThemeData theme,
-    IconData icon,
-    String text,
-    String ns,
-  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 1),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
@@ -241,18 +224,7 @@ class _VarChip extends StatelessWidget {
                 : theme.colorScheme.onErrorContainer,
           ),
           const SizedBox(width: 3),
-          // Paths run long — step ids are UUIDs — and a chip wider than the
-          // field overflows its Row, since a WidgetSpan can't wrap mid-chip.
-          // Flexible lets the label shrink and ellipsize instead.
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              style: theme.extension<AppTextThemes>()!.mono.bodyMedium,
-            ),
-          ),
+          Text(text, style: theme.extension<AppTextThemes>()!.mono.bodyMedium),
         ],
       ),
     );

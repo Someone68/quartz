@@ -123,7 +123,7 @@ class InspectorPanelState extends State<InspectorPanel> {
                                 buildStyledTooltip(
                                   context: context,
                                   message:
-                                      "${output.label}\n\n\"${output.name}\" is of type \"${output.type}\".\nYou can reference this output using {{steps.${widget.step!.id}.${output.name}}} (click to copy)",
+                                      "\"${output.name}\" is of type \"${output.type}\".\nYou can reference this output using {{steps.${widget.step!.id}.${output.name}}} (click to copy)",
                                   child: TinyChipButton(
                                     label: output.name,
                                     color: output.type == "string"
