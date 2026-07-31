@@ -113,7 +113,7 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
           Expanded(
             child: def != null
                 ? ListView(
-                    children: def.inputs
+                    children: _visibleInputs(def)
                         .map((i) => _triggerField(context, i))
                         .toList(),
                   )
@@ -197,6 +197,19 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
         ],
       ),
     );
+  }
+
+  /// Inputs whose `requires` gate is currently satisfied. Hidden inputs keep
+  /// their stored config value, so flipping the gating field back restores
+  /// what the user typed.
+  List<TriggerInput> _visibleInputs(TriggerDef def) {
+    final byName = {for (final i in def.inputs) i.name: i};
+    final requires = {for (final i in def.inputs) i.name: i.requires};
+    dynamic valueOf(String name) =>
+        _trigger.config[name] ?? byName[name]?.default_;
+    return def.inputs
+        .where((i) => inputVisible(i.name, requires, valueOf))
+        .toList();
   }
 
   Widget _triggerField(BuildContext context, TriggerInput input) {

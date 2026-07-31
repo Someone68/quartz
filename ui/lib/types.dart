@@ -18,6 +18,7 @@ class ActionInput {
   final double? min;
   final double? max;
   final String? tooltip;
+  final Map<String, dynamic>? requires;
 
   ActionInput({
     required this.name,
@@ -29,6 +30,7 @@ class ActionInput {
     this.min,
     this.max,
     this.tooltip,
+    this.requires,
   });
 
   factory ActionInput.fromJson(Map<String, dynamic> j) => ActionInput(
@@ -41,6 +43,7 @@ class ActionInput {
     min: (j['min'] as num?)?.toDouble(),
     max: (j['max'] as num?)?.toDouble(),
     tooltip: j['tooltip'],
+    requires: j['requires'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -53,7 +56,34 @@ class ActionInput {
     'min': min,
     'max': max,
     'tooltip': tooltip,
+    'requires': requires,
   };
+}
+
+/// Whether the input `name` should be shown, given every input's `requires`
+/// map (`{"other_input": expectedValue}`) and a lookup for the value each
+/// input currently holds.
+///
+/// Keys are ANDed; a list expectation matches when the current value is any of
+/// its entries. Gating chains: an input gated on an input that is itself hidden
+/// stays hidden. `seen` guards against cyclic `requires` definitions.
+bool inputVisible(
+  String name,
+  Map<String, Map<String, dynamic>?> requiresByName,
+  dynamic Function(String name) valueOf, [
+  Set<String>? seen,
+]) {
+  final requires = requiresByName[name];
+  if (requires == null || requires.isEmpty) return true;
+  final visited = seen ?? <String>{};
+  // Already on the current chain → a cycle; stop instead of recursing forever.
+  if (!visited.add(name)) return true;
+  return requires.entries.every((e) {
+    if (!inputVisible(e.key, requiresByName, valueOf, visited)) return false;
+    final actual = valueOf(e.key);
+    final expected = e.value;
+    return expected is List ? expected.contains(actual) : actual == expected;
+  });
 }
 
 class ActionOutput {
@@ -610,6 +640,7 @@ class TriggerInput {
   final double? min;
   final double? max;
   final String? tooltip;
+  final Map<String, dynamic>? requires;
 
   TriggerInput({
     required this.name,
@@ -621,6 +652,7 @@ class TriggerInput {
     this.min,
     this.max,
     this.tooltip,
+    this.requires,
   });
 
   factory TriggerInput.fromJson(Map<String, dynamic> j) => TriggerInput(
@@ -633,6 +665,7 @@ class TriggerInput {
     min: (j['min'] as num?)?.toDouble(),
     max: (j['max'] as num?)?.toDouble(),
     tooltip: j['tooltip'],
+    requires: j['requires'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -645,6 +678,7 @@ class TriggerInput {
     'min': min,
     'max': max,
     'tooltip': tooltip,
+    'requires': requires,
   };
 }
 

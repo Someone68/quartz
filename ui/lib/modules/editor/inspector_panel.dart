@@ -61,7 +61,9 @@ class InspectorPanelState extends State<InspectorPanel> {
             Expanded(
               child: ListView(
                 children: [
-                  ...def.inputs.map((input) => _buildField(context, input)),
+                  ..._visibleInputs(
+                    def,
+                  ).map((input) => _buildField(context, input)),
                 ],
               ),
             ),
@@ -164,6 +166,19 @@ class InspectorPanelState extends State<InspectorPanel> {
     );
   }
 
+  /// Inputs whose `requires` gate is currently satisfied. Hidden inputs keep
+  /// their stored value, so flipping the gating field back restores what the
+  /// user typed.
+  List<ActionInput> _visibleInputs(ActionDef def) {
+    final byName = {for (final i in def.inputs) i.name: i};
+    final requires = {for (final i in def.inputs) i.name: i.requires};
+    dynamic valueOf(String name) =>
+        widget.step?.getField(name) ?? byName[name]?.default_;
+    return def.inputs
+        .where((i) => inputVisible(i.name, requires, valueOf))
+        .toList();
+  }
+
   Widget _buildField(BuildContext context, ActionInput input) {
     final step = widget.step;
     final value = step?.getField(input.name) ?? input.default_;
@@ -207,10 +222,25 @@ class InspectorPanelState extends State<InspectorPanel> {
         );
         break;
       case 'app':
-        field = ActionChip(
-          label: Text(value?.toString() ?? 'Choose App'),
-          onPressed: () =>
-              showAppPicker(context, onSelect: (app) => set(app.name)),
+        field = Row(
+          children: [
+            ActionChip(
+              label: Text(
+                value != null ? truncate(value.toString(), 20) : 'Choose App',
+              ),
+              onPressed: () =>
+                  showAppPicker(context, onSelect: (app) => set(app.name)),
+            ),
+            const SizedBox(width: 8),
+            if (value != null)
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () => set(null),
+                iconSize: 16,
+                padding: EdgeInsets.all(4),
+                constraints: BoxConstraints(),
+              ),
+          ],
         );
         break;
       default: // string, path, template, and anything unknown

@@ -146,6 +146,7 @@ class TriggerInput(BaseModel):
     default: Any = None
     options: list[str] | None = None
     tooltip: str | None = None
+    requires: dict[str, Any] | None = None
     min: float | None = None
     max: float | None = None
 
