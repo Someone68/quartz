@@ -20,6 +20,6 @@ class AppTextThemes extends ThemeExtension<AppTextThemes> {
   @override
   AppTextThemes lerp(ThemeExtension<AppTextThemes>? other, double t) {
     if (other is! AppTextThemes) return this;
-    return AppTextThemes(mono: TextTheme.lerp(mono, other.mono, t)!);
+    return AppTextThemes(mono: TextTheme.lerp(mono, other.mono, t));
   }
 }

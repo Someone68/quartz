@@ -7,7 +7,7 @@ import 'package:quartz/modules/shortcut_card.dart';
 /// the list/grid view are wired up.
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key, required this.onEdit});
+  const HomePage({super.key, required this.onEdit});
 
   /// Opens a shortcut in the editor tab (provided by the shell).
   final void Function(Shortcut) onEdit;

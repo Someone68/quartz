@@ -8,10 +8,10 @@ class AppPicker extends StatefulWidget {
   final int port;
   final Function(AppEntry) onSelect;
 
-  AppPicker({required this.port, required this.onSelect});
+  const AppPicker({super.key, required this.port, required this.onSelect});
 
   @override
-  _AppPickerState createState() => _AppPickerState();
+  State<AppPicker> createState() => _AppPickerState();
 }
 
 class _AppPickerState extends State<AppPicker> {

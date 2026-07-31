@@ -20,7 +20,6 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
-  bool _navOpen = false;
 
   /// Bumped whenever the Shortcuts tab is (re)selected, to force HomePage to
   /// rebuild fresh and refetch — the IndexedStack keeps it alive otherwise.
@@ -31,8 +30,6 @@ class _AppShellState extends State<AppShell> {
   Shortcut? _editorShortcut;
 
   static const _kEditorIndex = 1;
-  // Icon-only NavigationRail minimum width in Material 3.
-  static const _kRailWidth = 72.0;
 
   static const _destinations = [
     _Dest(Icons.bolt_outlined, Icons.bolt, 'Shortcuts'),
@@ -40,15 +37,12 @@ class _AppShellState extends State<AppShell> {
     _Dest(Icons.settings_outlined, Icons.settings, 'Settings'),
   ];
 
-  bool get _editorActive => _index == _kEditorIndex;
-
   /// Load a shortcut into the editor and switch to it in-place, so the nav
   /// rail stays available (no route push = no softlock).
   void _openEditor(Shortcut shortcut) {
     setState(() {
       _editorShortcut = shortcut;
       _index = _kEditorIndex;
-      _navOpen = false;
     });
   }
 
@@ -66,7 +60,6 @@ class _AppShellState extends State<AppShell> {
       // Landing back on Shortcuts refetches the list (may have changed in editor).
       if (i == 0) _homeEpoch++;
       _index = i;
-      _navOpen = false;
     });
   }
 

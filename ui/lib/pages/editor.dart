@@ -80,10 +80,11 @@ class EditorPageState extends State<EditorPage> {
       for (final s in shortcut.steps) {
         List<String>? branch;
         if (s is IfStep) {
-          if (s.then.contains(id))
+          if (s.then.contains(id)) {
             branch = s.then;
-          else if (s.else_.contains(id))
+          } else if (s.else_.contains(id)) {
             branch = s.else_;
+          }
         } else if (s is LoopStep) {
           if (s.steps.contains(id)) branch = s.steps;
         } else if (s is RepeatStep) {
@@ -165,7 +166,7 @@ class EditorPageState extends State<EditorPage> {
         ? _actionDefs[selected.actionId]
         : _actionDefs[selected.type];
 
-    void _save(BuildContext context) {
+    void save(BuildContext context) {
       // Empty id = never persisted → create (POST). Otherwise update (PUT).
       final isNew = widget.shortcut.id.isEmpty;
       final request = isNew
@@ -173,17 +174,19 @@ class EditorPageState extends State<EditorPage> {
           : updateShortcut(widget.shortcut);
       request
           .then((saved) {
+            // The save round-trips to the backend; the page may be gone by now.
+            if (!context.mounted) return;
             // Adopt the server-minted id so subsequent saves update in place.
             setState(() => widget.shortcut.id = saved.id);
-            print('saved successfully: ${saved.id}');
+            debugPrint('saved successfully: ${saved.id}');
             showSnackBar(context, 'Saved successfully');
           })
           .catchError((e) {
-            print('save failed: $e');
+            debugPrint('save failed: $e');
           });
     }
 
-    void _editName() {
+    void editName() {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -290,7 +293,7 @@ class EditorPageState extends State<EditorPage> {
                                   SizedBox(width: 4),
                                   IconButton(
                                     icon: Icon(Icons.edit),
-                                    onPressed: _editName,
+                                    onPressed: editName,
                                     iconSize: 16,
                                     padding: EdgeInsets.all(4),
                                     constraints: BoxConstraints(),
@@ -327,7 +330,7 @@ class EditorPageState extends State<EditorPage> {
                             },
                           ),
                           ElevatedButton(
-                            onPressed: () => _save(context),
+                            onPressed: () => save(context),
                             style: ButtonStyle(
                               backgroundColor: WidgetStateProperty.all(
                                 Theme.of(context).colorScheme.primaryContainer,
@@ -585,6 +588,10 @@ class EditorPageState extends State<EditorPage> {
           setState(() {
             final step = widget.shortcut.addStep(def: def, branch: branch);
             _selectedId = step.id;
+            // Selecting the new step takes over from the shortcut, otherwise
+            // both stay highlighted and the inspector keeps showing the
+            // shortcut instead of the step just added.
+            _shortcutSelected = false;
           });
         },
       ),

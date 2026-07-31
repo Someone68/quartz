@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart' hide Step;
-import 'package:quartz/color_map.dart';
-import 'package:quartz/extensions.dart';
 import 'package:quartz/modules/misc.dart';
-import 'package:quartz/types.dart';
 
 class StepCard extends StatelessWidget {
   final IconData icon;
@@ -53,7 +50,7 @@ class StepCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
         ),
@@ -78,6 +75,7 @@ class StepCardFeedback extends StatelessWidget {
   final Color? iconColor;
 
   const StepCardFeedback({
+    super.key,
     required this.icon,
     required this.label,
     this.iconColor,

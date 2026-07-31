@@ -18,10 +18,10 @@ Future<ActionSummary?> showActionLibrary(
 class ActionLibrary extends StatefulWidget {
   final List<ActionSummary> items;
 
-  ActionLibrary({required this.items});
+  const ActionLibrary({super.key, required this.items});
 
   @override
-  _ActionLibraryState createState() => _ActionLibraryState();
+  State<ActionLibrary> createState() => _ActionLibraryState();
 }
 
 class _ActionLibraryState extends State<ActionLibrary> {
@@ -74,6 +74,7 @@ class _ActionLibraryState extends State<ActionLibrary> {
                   return buildStyledTooltip(
                     context: context,
                     message: filtered[index].description,
+                    exitDuration: const Duration(milliseconds: 0),
                     child: ListTile(
                       leading: buildStyledIcon(
                         context,

@@ -2,7 +2,6 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 String newId() => const Uuid().v4();
@@ -288,16 +287,16 @@ class SetVarStep extends Step {
   };
 
   @override
-  void setField(String name, dynamic v) {
+  void setField(String name, dynamic value) {
     switch (name) {
       case 'var_name':
-        varName = v?.toString() ?? '';
+        varName = value?.toString() ?? '';
       case 'value':
-        value = v;
+        this.value = value;
       case 'var_type':
-        varType = v?.toString() ?? 'string';
+        varType = value?.toString() ?? 'string';
       default:
-        super.setField(name, v);
+        super.setField(name, value);
     }
   }
 
@@ -317,7 +316,6 @@ class SetVarStep extends Step {
 
 class RunShortcutStep extends Step {
   final String shortcutId;
-  final Map<String, dynamic> inputs;
   final bool wait;
 
   RunShortcutStep({
@@ -327,7 +325,7 @@ class RunShortcutStep extends Step {
     super.label,
     super.enabled,
     required this.shortcutId,
-    this.inputs = const {},
+    super.inputs,
     this.wait = true,
   }) : super(type: 'run_shortcut');
 
@@ -402,11 +400,11 @@ class IfStep extends Step {
       name == 'condition' ? condition : super.getField(name);
 
   @override
-  void setField(String name, dynamic v) {
+  void setField(String name, dynamic value) {
     if (name == 'condition') {
-      condition = v?.toString() ?? '';
+      condition = value?.toString() ?? '';
     } else {
-      super.setField(name, v);
+      super.setField(name, value);
     }
   }
 }
@@ -459,14 +457,14 @@ class LoopStep extends Step {
   };
 
   @override
-  void setField(String name, dynamic v) {
+  void setField(String name, dynamic value) {
     switch (name) {
       case 'over':
-        over = v?.toString() ?? '';
+        over = value?.toString() ?? '';
       case 'variable':
-        variable = v?.toString() ?? '';
+        variable = value?.toString() ?? '';
       default:
-        super.setField(name, v);
+        super.setField(name, value);
     }
   }
 }
@@ -513,13 +511,13 @@ class RepeatStep extends Step {
       name == 'times' ? times : super.getField(name);
 
   @override
-  void setField(String name, dynamic v) {
+  void setField(String name, dynamic value) {
     if (name == 'times') {
       // Keep raw so `{{...}}` templates/expressions survive; backend resolves
       // then coerces to int at run time.
-      times = v;
+      times = value;
     } else {
-      super.setField(name, v);
+      super.setField(name, value);
     }
   }
 }
@@ -561,13 +559,13 @@ class WaitStep extends Step {
       name == 'duration' ? duration : super.getField(name);
 
   @override
-  void setField(String name, dynamic v) {
+  void setField(String name, dynamic value) {
     if (name == 'duration') {
       // Keep raw so `{{...}}` templates/expressions survive; backend resolves
       // then coerces to a number at run time.
-      duration = v;
+      duration = value;
     } else {
-      super.setField(name, v);
+      super.setField(name, value);
     }
   }
 }
@@ -615,14 +613,14 @@ class StopStep extends Step {
   };
 
   @override
-  void setField(String name, dynamic v) {
+  void setField(String name, dynamic value) {
     switch (name) {
       case 'message':
-        message = v?.toString();
+        message = value?.toString();
       case 'throwError':
-        throwError = v == true;
+        throwError = value == true;
       default:
-        super.setField(name, v);
+        super.setField(name, value);
     }
   }
 }

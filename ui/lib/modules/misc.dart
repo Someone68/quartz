@@ -27,7 +27,10 @@ IconData? symbolFromName(String? name) {
   final codepoint =
       materialSymbolsIconNameToUnicodeMap[name]; // verify exact map name after import
   if (codepoint == null) return null;
+  // Icons are named at run time by the backend schema, so the code point can't
+  // be a literal. Build with --no-tree-shake-icons or these render as boxes.
   return IconData(
+    // ignore: non_const_argument_for_const_parameter
     codepoint,
     fontFamily: 'MaterialSymbolsOutlined', // or Rounded / Sharp
     fontPackage: 'material_symbols_icons',
@@ -36,12 +39,12 @@ IconData? symbolFromName(String? name) {
 
 void printObject(dynamic obj) {
   if (obj is Map) {
-    obj.forEach((key, value) => print('$key: $value'));
+    obj.forEach((key, value) => debugPrint('$key: $value'));
   } else {
     try {
       printObject(obj.toJson());
     } catch (e) {
-      print(obj.toString());
+      debugPrint(obj.toString());
     }
   }
 }
@@ -187,6 +190,8 @@ class _TopNotificationState extends State<_TopNotification>
 void runShortcutWithLog(BuildContext context, String shortcutId) {
   runShortcut(shortcutId)
       .then((log) {
+        // The run is async; the caller's page may be gone by the time it ends.
+        if (!context.mounted) return;
         if (log.status != 'success' && log.status != 'stopped') {
           showDialog(
             context: context,
@@ -211,10 +216,11 @@ void runShortcutWithLog(BuildContext context, String shortcutId) {
             ),
           );
         }
-        print('run log: ');
+        debugPrint('run log: ');
         printObject(log);
       })
       .catchError((e) {
+        if (!context.mounted) return;
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -282,6 +288,7 @@ class TinyChip extends StatelessWidget {
   final BuildContext context;
 
   const TinyChip({
+    super.key,
     required this.label,
     required this.color,
     required this.context,
@@ -312,6 +319,7 @@ class TinyChipButton extends StatelessWidget {
   final VoidCallback? onTap;
 
   const TinyChipButton({
+    super.key,
     required this.label,
     required this.color,
     required this.context,
@@ -391,9 +399,12 @@ Widget buildStyledTooltip({
   TextStyle? textStyle,
   Decoration? decoration,
   Duration? waitDuration,
+  Duration? exitDuration,
   required BuildContext context,
 }) {
   return Tooltip(
+    enableTapToDismiss: true,
+    ignorePointer: true,
     decoration:
         decoration ??
         BoxDecoration(
@@ -404,8 +415,9 @@ Widget buildStyledTooltip({
         textStyle ?? TextStyle(color: Theme.of(context).colorScheme.onSurface),
     richMessage: message.isNotEmpty ? TextSpan(text: message) : null,
     constraints: BoxConstraints(maxWidth: 400),
-    child: child,
     waitDuration: waitDuration,
+    exitDuration: exitDuration,
+    child: child,
   );
 }
 
