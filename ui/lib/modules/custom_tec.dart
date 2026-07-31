@@ -224,7 +224,14 @@ class _VarChip extends StatelessWidget {
                 : theme.colorScheme.onErrorContainer,
           ),
           const SizedBox(width: 3),
-          Text(text, style: theme.extension<AppTextThemes>()!.mono.bodyMedium),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.extension<AppTextThemes>()!.mono.bodyMedium,
+            ),
+          ),
         ],
       ),
     );
