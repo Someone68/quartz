@@ -1,0 +1,23 @@
+from models import ActionDef, ActionInput, ActionOutput
+
+
+def _run(inputs: dict, context: dict) -> dict:
+    return {}
+
+
+ACTION = ActionDef(
+    id="category.action",
+    category="category",
+    name="Name",
+    description="Description",
+    icon="broken_image",
+    color="red",
+    platforms=["linux", "windows"],
+    inputs=[
+
+    ],
+    outputs=[
+
+    ],
+    run=_run,
+)
