@@ -38,13 +38,24 @@ class InspectorPanelState extends State<InspectorPanel> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(def.name, style: Theme.of(context).textTheme.titleMedium),
-                Text(
-                  widget.step?.id ?? "",
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(128),
+                Flexible(
+                  child: Text(
+                    def.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    widget.step?.id ?? "",
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withAlpha(128),
+                    ),
                   ),
                 ),
               ],
@@ -224,12 +235,14 @@ class InspectorPanelState extends State<InspectorPanel> {
       case 'app':
         field = Row(
           children: [
-            ActionChip(
-              label: Text(
-                value != null ? truncate(value.toString(), 20) : 'Choose App',
+            Flexible(
+              child: ActionChip(
+                label: Text(
+                  value != null ? truncate(value.toString(), 20) : 'Choose App',
+                ),
+                onPressed: () =>
+                    showAppPicker(context, onSelect: (app) => set(app.name)),
               ),
-              onPressed: () =>
-                  showAppPicker(context, onSelect: (app) => set(app.name)),
             ),
             const SizedBox(width: 8),
             if (value != null)
@@ -271,11 +284,13 @@ class InspectorPanelState extends State<InspectorPanel> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                InputLabelRow(
-                  label: input.label,
-                  required: input.required,
-                  tooltip: input.tooltip,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                Expanded(
+                  child: InputLabelRow(
+                    label: input.label,
+                    required: input.required,
+                    tooltip: input.tooltip,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 field,

@@ -277,49 +277,58 @@ class EditorPageState extends State<EditorPage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         spacing: 16,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    widget.shortcut.name,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.headlineMedium,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        overflow: TextOverflow.ellipsis,
+                                        widget.shortcut.name,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.headlineMedium,
+                                        textAlign: TextAlign.left,
+                                      ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    IconButton(
+                                      icon: Icon(Icons.edit),
+                                      onPressed: editName,
+                                      iconSize: 16,
+                                      padding: EdgeInsets.all(4),
+                                      constraints: BoxConstraints(),
+                                    ),
+                                  ],
+                                ),
+
+                                Flexible(
+                                  child: Text(
+                                    overflow: TextOverflow.ellipsis,
+                                    widget.shortcut.id.isEmpty
+                                        ? 'New Shortcut'
+                                        : widget.shortcut.id,
+                                    style: Theme.of(context)
+                                        .extension<AppTextThemes>()!
+                                        .mono
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withAlpha(128),
+                                        ),
+
                                     textAlign: TextAlign.left,
                                   ),
-                                  SizedBox(width: 4),
-                                  IconButton(
-                                    icon: Icon(Icons.edit),
-                                    onPressed: editName,
-                                    iconSize: 16,
-                                    padding: EdgeInsets.all(4),
-                                    constraints: BoxConstraints(),
-                                  ),
-                                ],
-                              ),
-
-                              Text(
-                                widget.shortcut.id.isEmpty
-                                    ? 'New Shortcut'
-                                    : widget.shortcut.id,
-                                style: Theme.of(context)
-                                    .extension<AppTextThemes>()!
-                                    .mono
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withAlpha(128),
-                                    ),
-
-                                textAlign: TextAlign.left,
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
-                          Spacer(),
                           ElevatedButton(
                             child: const Text('Copy ID'),
                             onPressed: () {
