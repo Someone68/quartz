@@ -216,8 +216,8 @@ void runShortcutWithLog(BuildContext context, String shortcutId) {
             ),
           );
         }
-        debugPrint('run log: ');
-        printObject(log);
+        // debugPrint('run log: ');
+        // printObject(log);
       })
       .catchError((e) {
         if (!context.mounted) return;
