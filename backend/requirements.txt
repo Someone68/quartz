@@ -10,6 +10,7 @@ pyperclip
 croniter
 pillow
 plyer
+requests
 
 pyxdg; sys_platform == "linux"
 cairosvg; sys_platform == "linux"
