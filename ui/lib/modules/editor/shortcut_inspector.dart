@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
+import 'package:quartz/config.dart';
 import 'package:quartz/extensions.dart';
 import 'package:quartz/modules/custom_tec.dart';
 import 'package:quartz/modules/misc.dart';
@@ -26,12 +27,7 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
   late final Map<String, TriggerDef> _triggerDefs;
 
   List<TriggerDef> getTriggerDefs() {
-    final home =
-        Platform.environment['HOME'] ??
-        Platform.environment['USERPROFILE'] ??
-        '~';
-    final cachePath = '$home/.config/quartz/triggers_cache.json';
-    final file = File(cachePath);
+    final file = File(quartzConfigPath('triggers_cache.json'));
     if (!file.existsSync()) return [];
     final map = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
     return map.values

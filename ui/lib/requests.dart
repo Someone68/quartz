@@ -1,13 +1,34 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:quartz/config.dart';
 import 'package:quartz/types.dart';
+
+Future<Map<String, dynamic>> getConfig() async {
+  final res = await http.get(apiUri('/config'));
+  if (res.statusCode != 200) {
+    throw Exception('Get failed: ${res.statusCode} ${res.body}');
+  }
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> setConfig(Map<String, dynamic> config) async {
+  final res = await http.put(
+    apiUri('/config'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode(config),
+  );
+  if (res.statusCode != 200) {
+    throw Exception('Put failed: ${res.statusCode} ${res.body}');
+  }
+  return jsonDecode(res.body);
+}
 
 /// POST a shortcut. Backend mints an id on create and echoes the stored
 /// shortcut back; we parse and return it so callers pick up the id.
 Future<Shortcut> saveShortcut(Shortcut shortcut) async {
   final res = await http.post(
-    Uri.parse('http://localhost:8757/shortcuts'),
+    apiUri('/shortcuts'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode(shortcut),
   );
@@ -18,7 +39,7 @@ Future<Shortcut> saveShortcut(Shortcut shortcut) async {
 }
 
 Future<List<ActionDef>> getActions() async {
-  final res = await http.get(Uri.parse('http://localhost:8757/actions'));
+  final res = await http.get(apiUri('/actions'));
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
   }
@@ -29,7 +50,7 @@ Future<List<ActionDef>> getActions() async {
 
 Future<Shortcut> updateShortcut(Shortcut shortcut) async {
   final res = await http.put(
-    Uri.parse('http://localhost:8757/shortcuts/${shortcut.id}'),
+    apiUri('/shortcuts/${shortcut.id}'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode(shortcut),
   );
@@ -41,7 +62,7 @@ Future<Shortcut> updateShortcut(Shortcut shortcut) async {
 
 Future<RunLog> runShortcut(String id) async {
   final res = await http.post(
-    Uri.parse('http://localhost:8757/shortcuts/$id/run'),
+    apiUri('/shortcuts/$id/run'),
     headers: {'Content-Type': 'application/json'},
   );
   if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -51,7 +72,7 @@ Future<RunLog> runShortcut(String id) async {
 }
 
 Future<List<ShortcutSummary>> getShortcuts() async {
-  final res = await http.get(Uri.parse('http://localhost:8757/shortcuts'));
+  final res = await http.get(apiUri('/shortcuts'));
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
   }
@@ -61,7 +82,7 @@ Future<List<ShortcutSummary>> getShortcuts() async {
 }
 
 Future<Shortcut> getShortcut(String id) async {
-  final res = await http.get(Uri.parse('http://localhost:8757/shortcuts/$id'));
+  final res = await http.get(apiUri('/shortcuts/$id'));
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
   }
@@ -70,7 +91,7 @@ Future<Shortcut> getShortcut(String id) async {
 
 Future<Shortcut> renameShortcut(String id, String name) async {
   final res = await http.patch(
-    Uri.parse('http://localhost:8757/shortcuts/$id/rename'),
+    apiUri('/shortcuts/$id/rename'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'name': name}),
   );
@@ -81,10 +102,21 @@ Future<Shortcut> renameShortcut(String id, String name) async {
 }
 
 Future<void> deleteShortcut(String id) async {
-  final res = await http.delete(
-    Uri.parse('http://localhost:8757/shortcuts/$id'),
-  );
+  final res = await http.delete(apiUri('/shortcuts/$id'));
   if (res.statusCode != 204) {
     throw Exception('Delete failed: ${res.statusCode} ${res.body}');
   }
+}
+
+/// Installed applications, used by the app picker.
+Future<List<AppEntry>> getApps() async {
+  final res = await http
+      .get(apiUri('/apps'))
+      .timeout(const Duration(seconds: 10));
+  if (res.statusCode != 200) {
+    throw Exception('Get failed: ${res.statusCode} ${res.body}');
+  }
+  return (jsonDecode(res.body)['apps'] as List)
+      .map((j) => AppEntry.fromJson(j))
+      .toList();
 }

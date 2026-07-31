@@ -1,14 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:quartz/requests.dart';
 import 'package:quartz/types.dart';
 
 class AppPicker extends StatefulWidget {
-  final int port;
   final Function(AppEntry) onSelect;
 
-  const AppPicker({super.key, required this.port, required this.onSelect});
+  const AppPicker({super.key, required this.onSelect});
 
   @override
   State<AppPicker> createState() => _AppPickerState();
@@ -29,18 +26,15 @@ class _AppPickerState extends State<AppPicker> {
 
   Future<void> _load() async {
     try {
-      final res = await http
-          .get(Uri.parse('http://127.0.0.1:${widget.port}/apps'))
-          .timeout(const Duration(seconds: 10));
-      final list = (jsonDecode(res.body)['apps'] as List)
-          .map((j) => AppEntry.fromJson(j))
-          .toList();
+      final list = await getApps();
+      if (!mounted) return;
       setState(() {
         _all = list;
         _shown = list;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = '$e';
         _loading = false;

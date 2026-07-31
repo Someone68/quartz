@@ -1,16 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:quartz/config.dart';
 import 'package:quartz/types.dart';
 
 // Full action definitions from the backend-written cache at
 // ~/.config/quartz/actions_cache.json (includes input/output schema).
 List<ActionDef> getActionDefs() {
-  final home =
-      Platform.environment['HOME'] ??
-      Platform.environment['USERPROFILE'] ??
-      '~';
-  final cachePath = '$home/.config/quartz/actions_cache.json';
+  final cachePath = quartzConfigPath('actions_cache.json');
   final actionsMap =
       jsonDecode(File(cachePath).readAsStringSync()) as Map<String, dynamic>;
 

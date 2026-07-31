@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'config.dart';
 import 'extensions.dart';
 
 import 'shell.dart';
@@ -9,6 +10,9 @@ import 'theme_notifier.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Backend host/port come from config.json; every request builds on this, so
+  // it has to land before any widget can fire one off.
+  loadBackendConfig();
   final theme = ThemeNotifier();
   await theme.load();
   runApp(ChangeNotifierProvider.value(value: theme, child: const QuartzApp()));

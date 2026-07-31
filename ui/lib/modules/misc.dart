@@ -428,7 +428,6 @@ Widget buildStyledTooltip({
 /// [AppPicker] puts its list in an [Expanded], which needs a bounded box.
 Future<AppEntry?> showAppPicker(
   BuildContext context, {
-  int port = 8757,
   double heightFactor = 0.7,
   Function(AppEntry)? onSelect,
 }) {
@@ -447,7 +446,6 @@ Future<AppEntry?> showAppPicker(
       child: SizedBox(
         height: MediaQuery.of(sheetContext).size.height * heightFactor,
         child: AppPicker(
-          port: port,
           onSelect: (app) {
             Navigator.pop(sheetContext, app);
             onSelect?.call(app);
