@@ -22,6 +22,7 @@ class RenameRequest(BaseModel):
 async def lifespan(app: FastAPI):
     cfg = config.get_config()
     print(f"Config loaded from {config.CONFIG_PATH}")
+    storage.migrate_runs()
     print("Loading actions...")
     registry.load_all()
     print(f"Loaded {len(registry.all_actions())} actions.")
