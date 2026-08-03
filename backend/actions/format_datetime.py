@@ -26,6 +26,7 @@ ACTION = ActionDef(
             label="ISO Datetime",
             tooltip="The ISO datetime string to format. Defaults to the current time.",
             type="string",
+            required=True,
             default=cur_time.isoformat(),
         ),
         ActionInput(
@@ -33,6 +34,7 @@ ACTION = ActionDef(
             label="Format template",
             tooltip="Format template. Use Python strftime format. Guide:\n %Y - Year (4 digits)\n %y - Year (2 digits)\n %m - Month (01-12)\n %B - Month name (Full)\n %b - Month name (Short)\n %d - Day (01-31)\n %j - Day of year (001-366)\n %A - Day of week (Full)\n %a - Day of week (Short)\n %w - Day of week (0-6)\n %H - Hour (00-23)\n %I - Hour (01-12)\n %M - Minute (00-59)\n %S - Second (00-59)\n %p - AM/PM\n %f - Microsecond (000000-999999)\n %U - Week number (Sunday start)\n %W - Week number (Monday start)\n %c - Local date and time\n %x - Local date\n %X - Local time\n %z - UTC offset\n %Z - Timezone name",
             type="string",
+            required=True,
             default="%Y-%m-%d %H:%M:%S",
         ),
     ],
