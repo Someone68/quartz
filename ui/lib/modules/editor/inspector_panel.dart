@@ -3,7 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:quartz/extensions.dart';
 import 'package:quartz/modules/custom_tec.dart';
 import 'package:quartz/modules/misc.dart';
+import 'package:quartz/modules/option_picker.dart';
 import 'package:quartz/types.dart';
+
+/// Above this many options a 'choice' input uses the lazy [showOptionPicker]
+/// sheet instead of [DropdownMenuFormField]. See the comment at its use site.
+const _kMaxInlineChoices = 25;
 
 class InspectorPanel extends StatefulWidget {
   /// Schema for the selected step's action (null when nothing selected or the
@@ -123,7 +128,7 @@ class InspectorPanelState extends State<InspectorPanel> {
                                 buildStyledTooltip(
                                   context: context,
                                   message:
-                                      "\"${output.name}\" is of type \"${output.type}\".\nYou can reference this output using {{steps.${widget.step!.id}.${output.name}}} (click to copy)",
+                                      "${output.label}\n\n\"${output.name}\" is of type \"${output.type}\".\nYou can reference this output using {{steps.${widget.step!.id}.${output.name}}} (click to copy)",
                                   child: TinyChipButton(
                                     label: output.name,
                                     color: output.type == "string"
@@ -201,17 +206,56 @@ class InspectorPanelState extends State<InspectorPanel> {
         field = Checkbox(value: value == true, onChanged: set);
         break;
       case 'choice':
-        field = DropdownButton<String>(
-          style: Theme.of(context).extension<AppTextThemes>()!.mono.bodyMedium,
-          isExpanded: true,
-          value: (input.options?.contains(value) ?? false)
-              ? value as String
-              : null,
-          items: (input.options ?? [])
-              .map((o) => DropdownMenuItem(value: o, child: Text(o)))
-              .toList(),
-          onChanged: set,
-        );
+        final options = input.options ?? const <String>[];
+        final selected = options.contains(value) ? value as String : null;
+        final mono = Theme.of(
+          context,
+        ).extension<AppTextThemes>()!.mono.bodyMedium;
+        field = options.length > _kMaxInlineChoices
+            // DropdownMenu is not lazy: it mounts every entry offstage to
+            // measure the widest label, and the open menu panel is a plain
+            // Column. A few hundred options (timezones) make every layout pass
+            // walk all of them. Swap to a lazy searchable sheet instead.
+            ? OutlinedButton(
+                key: ValueKey(input.name),
+                onPressed: () => showOptionPicker(
+                  context,
+                  options: options,
+                  selected: selected,
+                  hintText: 'Search ${input.label.toLowerCase()}',
+                  onSelect: set,
+                ),
+                style: OutlinedButton.styleFrom(
+                  alignment: Alignment.centerLeft,
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        selected ?? 'Choose ${input.label.toLowerCase()}',
+                        style: mono,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down),
+                  ],
+                ),
+              )
+            : DropdownMenuFormField<String>(
+                textStyle: mono,
+                // enableFilter: true,
+                enableSearch: true,
+                // Takes the parent's width, which also skips the offstage
+                // intrinsic-width measurement of every entry.
+                expandedInsets: EdgeInsets.zero,
+                initialSelection: selected,
+                dropdownMenuEntries: options
+                    .map((o) => DropdownMenuEntry(value: o, label: o))
+                    .toList(),
+                onSelected: set,
+                menuHeight: 300,
+              );
         break;
       case 'number':
         field = CustomTextField(

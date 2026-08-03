@@ -11,6 +11,7 @@ croniter
 pillow
 plyer
 requests
+tzlocal
 
 pyxdg; sys_platform == "linux"
 cairosvg; sys_platform == "linux"
