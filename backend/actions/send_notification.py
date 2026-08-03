@@ -4,18 +4,21 @@ import platform, subprocess
 
 
 def _run(inputs: dict, context: dict) -> dict:
-    title = inputs.get("title", "")
-    message = inputs.get("message", "")
-    timeout = inputs.get("timeout", 5)
+    title = str(inputs.get("title") or "")
+    message = str(inputs.get("message") or "")
+    try:
+        timeout = float(inputs.get("timeout") or 5)
+    except (TypeError, ValueError):
+        timeout = 5.0
 
     if platform.system() == "Linux":
         subprocess.run(
-            ["notify-send", "-t", str(timeout * 1000), title, message],
+            ["notify-send", "-t", str(int(timeout * 1000)), title, message],
             check=False,
         )
     else:
         assert notification is not None
-        notification.notify(title=title, message=message, timeout=timeout) # type: ignore[reportOptionalCall]
+        notification.notify(title=title, message=message, timeout=int(timeout)) # type: ignore[reportOptionalCall]
     return {}
 
 

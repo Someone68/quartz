@@ -4,7 +4,7 @@ from datetime import datetime
 
 import registry
 import storage
-from context import build_context, coerce, evaluate_condition, resolve
+from context import build_context, coerce, evaluate, evaluate_condition, resolve
 from models import (
     ActionStep,
     IfStep,
@@ -18,7 +18,6 @@ from models import (
     StopStep,
     WaitStep,
 )
-from simpleeval import simple_eval
 
 
 class ShortcutStopped(Exception):
@@ -77,11 +76,32 @@ def _run_steps(
         _run_step(step, context, steps_by_id)
 
 
+def _resolve_action_inputs(step: Step, action, context: dict) -> dict:
+    """Resolve an action step's input templates and settle the empty ones.
+
+    The UI writes an untouched optional field as null rather than omitting it,
+    so the key is present holding None and the `inputs.get(name, fallback)`
+    every action is written with never reaches its fallback -- the None goes
+    straight through to subprocess argv or arithmetic. Fill in the input's
+    declared default, and drop whatever is still None so the action's own
+    fallback applies.
+    """
+    resolved = {k: resolve(v, context) for k, v in step.inputs.items()}
+    for spec in action.inputs:
+        if resolved.get(spec.name) is not None:
+            continue
+        if spec.default is not None:
+            resolved[spec.name] = spec.default
+        else:
+            resolved.pop(spec.name, None)
+    return resolved
+
+
 def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
     match step:
         case ActionStep():
             action = registry.get(step.action_id)
-            resolved_inputs = {k: resolve(v, context) for k, v in step.inputs.items()}
+            resolved_inputs = _resolve_action_inputs(step, action, context)
             try:
                 result = action.run(resolved_inputs, context)
             except ShortcutStopped:
@@ -95,7 +115,7 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
             resolved = resolve(step.value, context)
             try:
                 context["variables"][step.var_name] = coerce(
-                    simple_eval(resolved), step.var_type
+                    evaluate(resolved), step.var_type
                 )
             except (ValueError, TypeError) as e:
                 raise ValueError(
@@ -136,10 +156,14 @@ def _run_step(step: Step, context: dict, steps_by_id: dict[str, Step]) -> None:
             _run_steps(branch, context, steps_by_id)
 
         case LoopStep():
-            items = resolve(step.over, context)
+            # evaluate() so a literal "[1, 2, 3]" typed into the field loops,
+            # not just a template that already resolves to a list.
+            items = evaluate(resolve(step.over, context))
+            if isinstance(items, (tuple, set)):
+                items = list(items)
             if not isinstance(items, list):
                 raise ValueError(
-                    f"Loop 'over' must resolve to a list, got: {type(items)}"
+                    f"Loop 'over' must resolve to a list, got {type(items).__name__}: {items!r}"
                 )
             for item in items:
                 context["variables"][step.variable] = item

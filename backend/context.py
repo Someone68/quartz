@@ -5,12 +5,28 @@ from typing import Any
 
 from jinja2 import Undefined
 from jinja2.nativetypes import NativeEnvironment
-from simpleeval import simple_eval
+from simpleeval import EvalWithCompoundTypes
+
+class _ContextEnvironment(NativeEnvironment):
+    """NativeEnvironment that looks up "a.b" as a["b"] before a.b.
+
+    Jinja tries the attribute first, so every context namespace being a plain
+    dict meant a variable named after a dict method was shadowed by it:
+    {{variables.items}} handed back the bound dict.items method instead of the
+    user's list. Same for keys, values, get, pop, count, update.
+    """
+
+    def getattr(self, obj, attribute):
+        try:
+            return obj[attribute]
+        except (TypeError, LookupError):
+            return super().getattr(obj, attribute)
+
 
 # NativeEnvironment keeps Python types: a value that is a single "{{ expr }}"
 # resolves to the real object (int/bool/list/dict), not its str repr. Mixed
 # text like "count is {{ x }}" still renders to a str.
-_jinja = NativeEnvironment(undefined=Undefined)
+_jinja = _ContextEnvironment(undefined=Undefined)
 
 
 def build_context(trigger_meta: dict) -> dict:
@@ -32,6 +48,27 @@ def resolve(value: Any, context: dict) -> Any:
     try:
         template = _jinja.from_string(value)
         return template.render(**context)
+    except Exception:
+        return value
+
+
+def evaluate(value: Any, names: dict | None = None) -> Any:
+    """Evaluate a resolved value as a small expression, returning it unchanged
+    when it is not one.
+
+    Two things the plain simple_eval() this replaced got wrong: it rejects
+    list/dict/tuple literals outright, so "[1, 2, 3]" could never become a
+    list, and it raises on ordinary text, so a variable set to "hello" or
+    "apple, banana" failed instead of staying a value. Text is a value here;
+    coerce() decides what to make of it.
+    """
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if not stripped:
+        return value
+    try:
+        return EvalWithCompoundTypes(names=names or {}).eval(stripped)
     except Exception:
         return value
 
@@ -104,6 +141,8 @@ def evaluate_condition(expr: str, context: dict) -> bool:
     # preprocess "contains" keyword
     resolved = resolved.replace(" contains ", " in ")
     try:
-        return bool(simple_eval(resolved))
+        # Compound types so membership tests against literals work:
+        # "'a' in ['a', 'b']" is rejected by the base evaluator.
+        return bool(EvalWithCompoundTypes().eval(resolved))
     except Exception as e:
         raise ValueError(f"Invalid condition '{expr}': {e}")
