@@ -41,9 +41,8 @@ class InspectorPanelState extends State<InspectorPanel> {
         children: [
           if (def != null) ...[
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
+                Expanded(
                   child: Text(
                     def.name,
                     style: Theme.of(context).textTheme.titleMedium,
@@ -51,7 +50,8 @@ class InspectorPanelState extends State<InspectorPanel> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Flexible(
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 96),
                   child: Text(
                     widget.step?.id ?? "",
                     textAlign: TextAlign.right,
@@ -77,9 +77,15 @@ class InspectorPanelState extends State<InspectorPanel> {
             Expanded(
               child: ListView(
                 children: [
-                  ..._visibleInputs(
-                    def,
-                  ).map((input) => _buildField(context, input)),
+                  if (_visibleInputs(def).isNotEmpty) ...[
+                    ..._visibleInputs(
+                      def,
+                    ).map((input) => _buildField(context, input)),
+                  ] else
+                    Text(
+                      'Step has no inputs.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                 ],
               ),
             ),
