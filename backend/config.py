@@ -18,6 +18,9 @@ class AppConfig(BaseModel):
     # commands, so binding a routable address exposes the machine to anyone
     # on the network. Do not widen this without adding auth.
     host: str = "127.0.0.1"
+    # Preferred port. The daemon binds this if free, otherwise falls back to an
+    # OS-chosen port and publishes the actual one in runtime.json. The UI reads
+    # that handshake file, so it always connects to the real port.
     port: int = 8757
     log_level: str = "info"
     # How many run logs to keep per shortcut (0 = unlimited).
