@@ -17,7 +17,7 @@ ACTION = ActionDef(
     color="lime",
     platforms=["linux", "windows"],
     inputs=[
-        ActionInput(name="value", type="string", label="Value", required=True),
+        ActionInput(name="value", type="string", label="Value", required=True, tooltip="The mathematical expression to evaluate. Can contain variables and operators. Example: 2 * (3 + {{variables.x}})"),
     ],
     outputs=[
         ActionOutput(name="result", type="number", label="Result"),

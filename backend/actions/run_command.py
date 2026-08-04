@@ -39,7 +39,7 @@ ACTION = ActionDef(
     color="cyan",
     platforms=["linux", "windows"],
     inputs=[
-        ActionInput(name="command", type="string", label="Command", required=True),
+        ActionInput(name="command", type="string", label="Command", required=True, tooltip="The shell command to run. Example: `ls -la`"),
         ActionInput(
             name="timeout",
             type="number",
@@ -48,6 +48,7 @@ ACTION = ActionDef(
             default=30,
             min=1,
             max=300,
+            tooltip="Time in seconds the command can run before being timed out."
         ),
         ActionInput(
             name="willabort",
@@ -55,12 +56,13 @@ ACTION = ActionDef(
             label="Abort on error",
             required=True,
             default=True,
+            tooltip="Whether the shortcut should abort if the command returns a non-zero exit code."
         ),
     ],
     outputs=[
-        ActionOutput(name="stdout", type="string", label="Standard output"),
-        ActionOutput(name="stderr", type="string", label="Standard error"),
-        ActionOutput(name="exit_code", type="number", label="Exit code"),
+        ActionOutput(name="stdout", type="string", label="Standard output. Example: `Hello World!`"),
+        ActionOutput(name="stderr", type="string", label="Standard error. Example: `Error: ...`"),
+        ActionOutput(name="exit_code", type="number", label="Exit code."),
     ],
     run=_run,
 )

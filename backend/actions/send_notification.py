@@ -31,9 +31,9 @@ ACTION = ActionDef(
     color="amber",
     platforms=["linux", "windows"],
     inputs=[
-        ActionInput(name="title", type="string", label="Title", required=False),
-        ActionInput(name="message", type="string", label="Message", required=False),
-        ActionInput(name="timeout", type="number", label="Timeout (seconds)", required=False,default=5),
+        ActionInput(name="title", type="string", label="Title", required=False, tooltip="The title of the notification."),
+        ActionInput(name="message", type="string", label="Message", required=False, tooltip="The message of the notification."),
+        ActionInput(name="timeout", type="number", label="Timeout (seconds)", required=False, default=5, tooltip="The duration the notification will be displayed."),
     ],
     outputs=[],
     run=_run,
