@@ -28,7 +28,7 @@ ACTION = ActionDef(
             name="timezone",
             label="Timezone",
             type="choice",
-            options=["utc", "local", *zones],
+            options=["UTC", "local", *zones],
             default="local",
         ),
     ],
