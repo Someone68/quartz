@@ -12,7 +12,11 @@ pillow
 plyer
 requests
 tzlocal
+screen-brightness-control
 
 pyxdg; sys_platform == "linux"
 cairosvg; sys_platform == "linux"
+pulsectl; sys_platform == "linux"
 pywin32; sys_platform == "win32"
+pycaw; sys_platform == "win32"
+comtypes; sys_platform == "win32"

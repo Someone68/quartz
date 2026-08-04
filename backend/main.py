@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 import get_apps
+import get_brightness
 from get_apps import launch_by_name, load_apps
 import config
 import executor
@@ -31,6 +32,7 @@ async def lifespan(app: FastAPI):
     print(f"Loaded {len(trigger_registry.all_triggers())} triggers.")
     print("Starting trigger listeners...")
     trigger_manager.start_all()
+    get_brightness.prewarm()
     yield
     trigger_manager.stop_all()
 
