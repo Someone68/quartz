@@ -1,0 +1,60 @@
+# nfpm config: one description, both .deb and .rpm.
+#   nfpm pkg --packager deb --target dist/
+#   nfpm pkg --packager rpm --target dist/
+#
+# Paths are relative to the repo root (run nfpm from there). The Makefile stages
+# the frozen daemon, the Flutter bundle and the icon into dist/ first.
+name: quartz
+arch: amd64
+platform: linux
+version: "1.0.0"
+section: utils
+priority: optional
+maintainer: Quartz <felix002m@gmail.com>
+description: |
+  Trigger-driven desktop automation. Build chainable automations through a
+  visual GUI — like iOS Shortcuts for the Linux desktop.
+homepage: https://github.com/Someone68/quartz
+license: MIT
+
+contents:
+  # Background daemon.
+  - src: dist/quartzd
+    dst: /usr/lib/quartz/quartzd
+    file_info:
+      mode: 0755
+
+  # Flutter UI bundle (binary + its lib/ and data/). Kept together so the
+  # binary's $ORIGIN rpath finds its libraries.
+  - src: dist/ui
+    dst: /usr/lib/quartz/ui
+    type: tree
+
+  # Launcher on PATH. $ORIGIN resolves through the symlink to the real bundle
+  # dir, so lib/ is still found.
+  - src: /usr/lib/quartz/ui/quartz
+    dst: /usr/bin/quartz
+    type: symlink
+
+  # systemd *user* unit (enabled per-user by the postinstall script).
+  - src: packaging/linux/quartzd.service
+    dst: /usr/lib/systemd/user/quartzd.service
+
+  - src: packaging/linux/quartz.desktop
+    dst: /usr/share/applications/quartz.desktop
+
+  - src: dist/quartz.png
+    dst: /usr/share/icons/hicolor/256x256/apps/quartz.png
+
+scripts:
+  postinstall: packaging/linux/postinstall.sh
+  preremove: packaging/linux/preremove.sh
+
+overrides:
+  deb:
+    depends:
+      # Tray backend (AppIndicator). The daemon degrades gracefully without it.
+      - libayatana-appindicator3-1
+  rpm:
+    depends:
+      - libayatana-appindicator-gtk3

@@ -1,0 +1,89 @@
+name: build
+
+# Build the daemon + UI and produce installers for each OS. Runs on tags and
+# manual dispatch; artifacts are uploaded (and attached to a release on tags).
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          # Flutter Linux desktop toolchain + GTK, plus the tray backend lib.
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libayatana-appindicator3-dev
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install nfpm
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' \
+            | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt-get update && sudo apt-get install -y nfpm
+
+      - name: Stamp version
+        run: packaging/set-version.sh
+
+      - name: Build .deb and .rpm
+        run: make linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            dist/*.deb
+            dist/*.rpm
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Stamp version
+        shell: bash
+        run: packaging/set-version.sh
+
+      - name: Create self-signed cert
+        run: powershell -ExecutionPolicy Bypass -File packaging\windows\make-cert.ps1
+
+      - name: Build + sign MSIX
+        run: powershell -ExecutionPolicy Bypass -File packaging\windows\build-msix.ps1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-msix
+          path: dist/quartz.msix
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*

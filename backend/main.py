@@ -1,3 +1,5 @@
+import os
+import secrets
 from contextlib import asynccontextmanager
 
 import get_apps
@@ -7,12 +9,16 @@ import config
 import executor
 import paths
 import registry
+import runtime
 import storage
+import tray
 import trigger_manager
 import trigger_registry
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from models import Shortcut
 from pydantic import BaseModel
+from version import __version__
 
 
 class RenameRequest(BaseModel):
@@ -23,6 +29,14 @@ class RenameRequest(BaseModel):
 async def lifespan(app: FastAPI):
     cfg = config.get_config()
     print(f"Config loaded from {config.CONFIG_PATH}")
+    # Publish the handshake so the UI can find us. Port and token are chosen in
+    # __main__ (or on first import when run without it) and passed via env so
+    # they survive uvicorn's reloader spawning a child process.
+    token = os.environ.get("QUARTZ_TOKEN") or runtime.new_token()
+    port = int(os.environ.get("QUARTZ_PORT", cfg.port))
+    runtime.set_token(token)
+    runtime.write(cfg.host, port, token)
+    print(f"Handshake written to {runtime.RUNTIME_PATH} (port {port})")
     storage.migrate_runs()
     print("Loading actions...")
     registry.load_all()
@@ -33,8 +47,10 @@ async def lifespan(app: FastAPI):
     print("Starting trigger listeners...")
     trigger_manager.start_all()
     get_brightness.prewarm()
+    tray.start(port)
     yield
     trigger_manager.stop_all()
+    runtime.remove()
 
 
 app = FastAPI(title="Quartz Backend", lifespan=lifespan)
@@ -42,6 +58,33 @@ app = FastAPI(title="Quartz Backend", lifespan=lifespan)
 # No CORS middleware on purpose: the Flutter desktop client uses dart:io and
 # is not subject to CORS, while a permissive policy would let any website the
 # user visits drive this API from their browser.
+
+# Paths reachable without the auth token: only the discovery probe the UI hits
+# before it has read the token from the handshake file.
+_PUBLIC_PATHS = {"/health"}
+
+
+@app.middleware("http")
+async def require_token(request: Request, call_next):
+    """Gate every request on the per-run Bearer token.
+
+    Loopback binding already blocks the network; this stops other local users
+    (who can also reach 127.0.0.1) from driving an API that runs shell commands.
+    """
+    if request.url.path not in _PUBLIC_PATHS:
+        expected = runtime.get_token()
+        presented = request.headers.get("Authorization", "")
+        if not expected or not secrets.compare_digest(
+            presented, f"Bearer {expected}"
+        ):
+            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    return await call_next(request)
+
+
+@app.get("/health")
+def health():
+    """Unauthenticated liveness probe used by the UI to discover the daemon."""
+    return {"status": "ok", "version": __version__}
 
 
 @app.get("/shortcuts")
@@ -149,12 +192,20 @@ if __name__ == "__main__":
     import uvicorn
 
     cfg = config.get_config()
+    # config.port is the *preferred* port; fall back to an OS-chosen free port
+    # if it is taken so a second daemon (or a leftover) can't wedge startup.
+    port = runtime.find_free_port(cfg.host, cfg.port)
+    # Hand the chosen port and a fresh token to the serving process via env.
+    # With reload=True uvicorn runs the app in a child process, so a module
+    # global would not reach the lifespan; the environment does.
+    os.environ["QUARTZ_PORT"] = str(port)
+    os.environ.setdefault("QUARTZ_TOKEN", secrets.token_urlsafe(32))
     # A frozen build has no importable "main" module and cannot fork a
     # reloader child, so hand uvicorn the app object and keep reload off.
     uvicorn.run(
         app if paths.IS_FROZEN else "main:app",
         host=cfg.host,
-        port=cfg.port,
+        port=port,
         log_level=cfg.log_level,
         reload=not paths.IS_FROZEN,
     )

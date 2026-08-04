@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSIX manifest for Quartz.
+
+  The package ships two executables: the Flutter UI (quartz.exe, the app tile
+  and entry point) and the background daemon (quartzd.exe). A windows.startupTask
+  extension launches the daemon at logon *in the user session* — so hotkey,
+  clipboard and foreground-app triggers work. This deliberately avoids a real
+  Windows Service, which runs in isolated session 0 and cannot see the desktop.
+
+  Publisher must match the signing certificate subject. Version is stamped by
+  packaging/set-version.sh (X.Y.Z -> X.Y.Z.0).
+-->
+<Package
+    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+    xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+    IgnorableNamespaces="uap rescap desktop">
+
+  <Identity
+      Name="com.quartz.app"
+      Publisher="CN=Quartz Dev"
+      Version="1.0.0.0"
+      ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Quartz</DisplayName>
+    <PublisherDisplayName>Quartz</PublisherDisplayName>
+    <Description>Trigger-driven desktop automation.</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0"
+                        MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Capabilities>
+    <!-- Full-trust desktop app: it runs shell commands and controls the system. -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+  <Applications>
+    <Application Id="Quartz" Executable="quartz.exe"
+                 EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+          DisplayName="Quartz"
+          Description="Trigger-driven desktop automation."
+          BackgroundColor="transparent"
+          Square150x150Logo="Assets\Square150x150Logo.png"
+          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!-- Start the daemon at logon; the user can disable it in Settings >
+             Apps > Startup. -->
+        <desktop:Extension
+            Category="windows.startupTask"
+            Executable="quartzd.exe"
+            EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask
+              TaskId="QuartzDaemon"
+              Enabled="true"
+              DisplayName="Quartz backend" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+</Package>
