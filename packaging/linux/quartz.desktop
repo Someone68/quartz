@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Quartz
+Comment=Build trigger-driven desktop automations
+Exec=/usr/bin/quartz
+Icon=quartz
+Terminal=false
+Categories=Utility;
+StartupWMClass=com.quartz.app

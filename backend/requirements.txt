@@ -13,6 +13,7 @@ plyer
 requests
 tzlocal
 screen-brightness-control
+pystray
 
 pyxdg; sys_platform == "linux"
 cairosvg; sys_platform == "linux"

@@ -5,7 +5,7 @@ import 'package:quartz/config.dart';
 import 'package:quartz/types.dart';
 
 Future<Map<String, dynamic>> getConfig() async {
-  final res = await http.get(apiUri('/config'));
+  final res = await http.get(apiUri('/config'), headers: authHeaders());
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
   }
@@ -15,7 +15,7 @@ Future<Map<String, dynamic>> getConfig() async {
 Future<Map<String, dynamic>> setConfig(Map<String, dynamic> config) async {
   final res = await http.put(
     apiUri('/config'),
-    headers: {'Content-Type': 'application/json'},
+    headers: authHeaders({'Content-Type': 'application/json'}),
     body: jsonEncode(config),
   );
   if (res.statusCode != 200) {
@@ -29,7 +29,7 @@ Future<Map<String, dynamic>> setConfig(Map<String, dynamic> config) async {
 Future<Shortcut> saveShortcut(Shortcut shortcut) async {
   final res = await http.post(
     apiUri('/shortcuts'),
-    headers: {'Content-Type': 'application/json'},
+    headers: authHeaders({'Content-Type': 'application/json'}),
     body: jsonEncode(shortcut),
   );
   if (res.statusCode != 201) {
@@ -39,7 +39,7 @@ Future<Shortcut> saveShortcut(Shortcut shortcut) async {
 }
 
 Future<List<ActionDef>> getActions() async {
-  final res = await http.get(apiUri('/actions'));
+  final res = await http.get(apiUri('/actions'), headers: authHeaders());
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
   }
@@ -51,7 +51,7 @@ Future<List<ActionDef>> getActions() async {
 Future<Shortcut> updateShortcut(Shortcut shortcut) async {
   final res = await http.put(
     apiUri('/shortcuts/${shortcut.id}'),
-    headers: {'Content-Type': 'application/json'},
+    headers: authHeaders({'Content-Type': 'application/json'}),
     body: jsonEncode(shortcut),
   );
   if (res.statusCode != 200) {
@@ -63,7 +63,7 @@ Future<Shortcut> updateShortcut(Shortcut shortcut) async {
 Future<RunLog> runShortcut(String id) async {
   final res = await http.post(
     apiUri('/shortcuts/$id/run'),
-    headers: {'Content-Type': 'application/json'},
+    headers: authHeaders({'Content-Type': 'application/json'}),
   );
   if (res.statusCode < 200 || res.statusCode >= 300) {
     throw Exception('Run failed: ${res.statusCode} ${res.body}');
@@ -72,7 +72,7 @@ Future<RunLog> runShortcut(String id) async {
 }
 
 Future<List<ShortcutSummary>> getShortcuts() async {
-  final res = await http.get(apiUri('/shortcuts'));
+  final res = await http.get(apiUri('/shortcuts'), headers: authHeaders());
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
   }
@@ -82,7 +82,7 @@ Future<List<ShortcutSummary>> getShortcuts() async {
 }
 
 Future<Shortcut> getShortcut(String id) async {
-  final res = await http.get(apiUri('/shortcuts/$id'));
+  final res = await http.get(apiUri('/shortcuts/$id'), headers: authHeaders());
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
   }
@@ -92,7 +92,7 @@ Future<Shortcut> getShortcut(String id) async {
 Future<Shortcut> renameShortcut(String id, String name) async {
   final res = await http.patch(
     apiUri('/shortcuts/$id/rename'),
-    headers: {'Content-Type': 'application/json'},
+    headers: authHeaders({'Content-Type': 'application/json'}),
     body: jsonEncode({'name': name}),
   );
   if (res.statusCode != 200) {
@@ -102,7 +102,10 @@ Future<Shortcut> renameShortcut(String id, String name) async {
 }
 
 Future<void> deleteShortcut(String id) async {
-  final res = await http.delete(apiUri('/shortcuts/$id'));
+  final res = await http.delete(
+    apiUri('/shortcuts/$id'),
+    headers: authHeaders(),
+  );
   if (res.statusCode != 204) {
     throw Exception('Delete failed: ${res.statusCode} ${res.body}');
   }
@@ -111,7 +114,7 @@ Future<void> deleteShortcut(String id) async {
 /// Installed applications, used by the app picker.
 Future<List<AppEntry>> getApps() async {
   final res = await http
-      .get(apiUri('/apps'))
+      .get(apiUri('/apps'), headers: authHeaders())
       .timeout(const Duration(seconds: 10));
   if (res.statusCode != 200) {
     throw Exception('Get failed: ${res.statusCode} ${res.body}');
