@@ -65,16 +65,19 @@ jobs:
         shell: bash
         run: packaging/set-version.sh
 
-      - name: Create self-signed cert
-        run: powershell -ExecutionPolicy Bypass -File packaging\windows\make-cert.ps1
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
 
-      - name: Build + sign MSIX
-        run: powershell -ExecutionPolicy Bypass -File packaging\windows\build-msix.ps1
+      # Unsigned installer: no code-signing cert, so users get a SmartScreen
+      # "unknown publisher" prompt. The MSIX path needs a trusted cert to be
+      # installable by anyone but the build machine, so it is not built here.
+      - name: Build installer
+        run: powershell -ExecutionPolicy Bypass -File packaging\windows\build-installer.ps1
 
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-msix
-          path: dist/quartz.msix
+          name: windows-installer
+          path: dist/quartz-setup-*.exe
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
