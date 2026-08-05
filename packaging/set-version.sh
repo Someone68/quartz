@@ -36,6 +36,12 @@ if [[ -f "$ROOT/packaging/linux/nfpm.yaml" ]]; then
   sed -i -E "s/^version: .*/version: \"$VER\"/" "$ROOT/packaging/linux/nfpm.yaml"
 fi
 
+# Inno Setup installer: #define AppVersion "X.Y.Z" (also names the output exe).
+ISS="$ROOT/packaging/windows/quartz.iss"
+if [[ -f "$ISS" ]]; then
+  sed -i -E "s/^#define AppVersion \".*\"/#define AppVersion \"$VER\"/" "$ISS"
+fi
+
 # MSIX manifest identity: 4-part Version="X.Y.Z.0". Anchor to the Identity line
 # (whitespace then Version=) so we don't clobber MinVersion/MaxVersionTested.
 MANIFEST="$ROOT/packaging/windows/AppxManifest.xml"
