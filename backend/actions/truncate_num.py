@@ -1,17 +1,28 @@
+import math
+
 from models import ActionDef, ActionInput, ActionOutput
 
 
 def _run(inputs: dict, context: dict) -> dict:
-    value = int(inputs["value"])
-    places = int(inputs["places"])
+    value = float(inputs["value"])
+    raw_places = inputs.get("places")
+    places = int(raw_places) if raw_places not in (None, "") else -1
+    remove_zeros = bool(inputs["remove_zeros"])
     rounding = inputs["rounding"]
-    result = (
-        round(value, places)
-        if rounding == "round"
-        else int(value)
-        if rounding == "floor"
-        else int(value) + 1
-    )
+    if places != -1:
+        factor = 10 ** places
+        if rounding == "round":
+            result = round(value, places)
+        elif rounding == "floor":
+            result = math.floor(value * factor) / factor
+        else:  # ceil
+            result = math.ceil(value * factor) / factor
+    else:
+        result = value
+
+    result = float(result)
+    if remove_zeros and result.is_integer():
+        result = int(result)
     return {"result": result}
 
 
@@ -35,8 +46,15 @@ ACTION = ActionDef(
             name="places",
             type="number",
             label="Places",
-            required=True,
+            required=False,
             tooltip="The number of decimal places to truncate to.",
+        ),
+        ActionInput(
+            name="remove_zeros",
+            type="boolean",
+            label="Remove Trailing Zeros",
+            required=True,
+            tooltip="Whether to remove trailing zeros from the result. (e.g. 1.00 becomes 1)",
         ),
         ActionInput(
             name="rounding",
