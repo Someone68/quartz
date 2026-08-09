@@ -31,5 +31,12 @@ Try creating your first shortcut by going to the editor, or pressing the "Create
 7. Now let's add the second "Type Cast: Cast to Number" action. Set the `value` field to the `response` output of the second dialog box action. (You can copy the `response` output from the second dialog box action and paste it here.)
 8. Now we have both responses converted to numbers, and we can use them in math operations. Add the "Math: Evaluate Expression" action to your shortcut and set the `value` field to the sum of the two converted numbers. To do this, copy the `result` output from the first "Math: Evaluate Expression" action and paste it here. Then add the `+` operator and the `result` output from the second "Math: Evaluate Expression" action to get the final sum. (`value` field should look something like: `{{s2.result}} + {{s3.result}}`)
 9. With the final sum, we can show the result to the user using the "Output: Message Box" action. Set the `body` field to the `value` output of the "Math: Evaluate Expression" action. (`body` field should look something like: `{{s4.result}}`) Make sure to set the `title` field to a descriptive message so the user knows what the result is.
+10. To test your shortcut, press the save button and then run the shortcut. It should ask for two numbers and then display the sum of the two numbers in a message box.
+
+> [!NOTE]
+> You might see that the result is a decimal number like 3.0. To turn this into an integer, use the "Math: Truncate Number" action.
+
+> [!TIP]
+> You can drag and drop steps in your shortcut using the grab bar on the right of each step.
 
 Congratulations! You have successfully created a shortcut that uses quartz to evaluate a mathematical expression and display the result to the user. Make sure to save your shortcut and test it out to make sure it works as expected.
