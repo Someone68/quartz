@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quartz/extensions.dart';
 import 'package:quartz/modules/misc.dart';
 import 'package:quartz/requests.dart';
 import 'package:quartz/types.dart';
@@ -209,9 +210,24 @@ class _ShortcutCardState extends State<ShortcutCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const CircleAvatar(
-                    radius: 16.0,
-                    child: Icon(Icons.star_rounded, size: 24.0),
+                  Builder(
+                    builder: (context) {
+                      final bg = context
+                          .hue(Color(widget.shortcutSummary.color))
+                          .primaryContainer;
+                      return CircleAvatar(
+                        radius: 16.0,
+                        backgroundColor: bg,
+                        // The user picks any hue, so the glyph has to follow the
+                        // background's brightness or it disappears on it.
+                        foregroundColor: onColorFor(bg),
+                        child: Icon(
+                          symbolFromName(widget.shortcutSummary.icon) ??
+                              Icons.star_rounded,
+                          size: 24.0,
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 4.0),
                   Text(

@@ -244,9 +244,9 @@ class EditorPageState extends State<EditorPage> {
                                   icon:
                                       symbolFromName(widget.shortcut.icon) ??
                                       Icons.warning_rounded,
-                                  iconColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
+                                  iconColor: context
+                                      .hue(Color(widget.shortcut.color))
+                                      .primaryContainer,
                                 ),
                               ),
                               ..._renderIds(

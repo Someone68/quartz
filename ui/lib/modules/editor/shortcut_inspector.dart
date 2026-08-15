@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
 import 'package:quartz/config.dart';
@@ -55,6 +56,41 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
     widget.onChanged();
   }
 
+  /// The inspector column is only 280px wide and already gives its remaining
+  /// height to the trigger fields, so the picker lives in a dialog instead of
+  /// inline; committing on OK also keeps a drag across the wheel from writing
+  /// (and autosaving) a colour per frame.
+  Future<void> _pickColor() async {
+    var picked = Color(widget.shortcut.color);
+    final confirmed =
+        await ColorPicker(
+          color: picked,
+          onColorChanged: (c) => picked = c,
+          title: Text('Color', style: Theme.of(context).textTheme.titleMedium),
+          width: 36,
+          height: 36,
+          borderRadius: 6,
+          spacing: 4,
+          runSpacing: 4,
+          enableShadesSelection: true,
+          pickersEnabled: const {
+            ColorPickerType.primary: true,
+            ColorPickerType.accent: false,
+            ColorPickerType.wheel: true,
+          },
+        ).showPickerDialog(
+          context,
+          constraints: const BoxConstraints(
+            minHeight: 480,
+            minWidth: 320,
+            maxWidth: 320,
+          ),
+        );
+    if (!confirmed || !mounted) return;
+    setState(() => widget.shortcut.color = picked.toARGB32());
+    widget.onChanged();
+  }
+
   void _setConfig(String name, dynamic v) {
     _trigger.config[name] = v; // mutate map in place
     widget.onChanged();
@@ -84,6 +120,42 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
           ),
           const SizedBox(height: 16),
 
+          Text(
+            'Color (will only use hue)',
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: 4),
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: _pickColor,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Color(widget.shortcut.color),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '#${widget.shortcut.color.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
+                    style: Theme.of(
+                      context,
+                    ).extension<AppTextThemes>()?.mono.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
           Text('Trigger', style: Theme.of(context).textTheme.labelMedium),
           const SizedBox(height: 4),
           DropdownButton<String>(
@@ -109,9 +181,9 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
           Expanded(
             child: def != null
                 ? ListView(
-                    children: _visibleInputs(def)
-                        .map((i) => _triggerField(context, i))
-                        .toList(),
+                    children: _visibleInputs(
+                      def,
+                    ).map((i) => _triggerField(context, i)).toList(),
                   )
                 : _trigger.type != "manual"
                 ? Text(

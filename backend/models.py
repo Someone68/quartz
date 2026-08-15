@@ -211,11 +211,17 @@ def new_id() -> str:
     return str(uuid4())
 
 
+# ARGB accent used by shortcuts that predate the `color` field, and by new ones.
+# Mirrors kDefaultShortcutColor in ui/lib/types.dart.
+DEFAULT_SHORTCUT_COLOR = 0xFF2196F3
+
+
 class Shortcut(BaseModel):
     id: str = Field(default_factory=new_id)
     name: str
     description: str = ""
     icon: str = "star"
+    color: int = DEFAULT_SHORTCUT_COLOR
     enabled: bool = True
     trigger: Trigger
     steps: list[Step] = []
@@ -248,4 +254,5 @@ class ShortcutSummary(BaseModel):
     id: str
     name: str
     icon: str | None
+    color: int = DEFAULT_SHORTCUT_COLOR
     step_count: int

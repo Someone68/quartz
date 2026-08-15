@@ -773,11 +773,16 @@ class Trigger {
 
 // ---- Shortcut ----
 
+/// ARGB fallback for shortcuts written before `color` existed, and the seed for
+/// newly created ones. Mirrors DEFAULT_SHORTCUT_COLOR in backend/models.py.
+const int kDefaultShortcutColor = 0xFF2196F3;
+
 class Shortcut {
   String id;
   String name;
   String description;
   String icon;
+  int color;
   bool enabled;
   Trigger trigger;
   List<Step> steps;
@@ -789,6 +794,7 @@ class Shortcut {
     required this.name,
     this.description = '',
     this.icon = 'star',
+    this.color = kDefaultShortcutColor,
     this.enabled = true,
     required this.trigger,
     List<Step>? steps,
@@ -909,6 +915,7 @@ class Shortcut {
     name: j['name'],
     description: j['description'] ?? '',
     icon: j['icon'] ?? 'star',
+    color: j['color'] ?? kDefaultShortcutColor,
     enabled: j['enabled'] ?? true,
     trigger: Trigger.fromJson(j['trigger']),
     steps: (j['steps'] as List? ?? []).map((e) => Step.fromJson(e)).toList(),
@@ -921,6 +928,7 @@ class Shortcut {
     'name': name,
     'description': description,
     'icon': icon,
+    'color': color,
     'enabled': enabled,
     'trigger': trigger.toJson(),
     'steps': steps.map((e) => e.toJson()).toList(),
@@ -980,12 +988,14 @@ class ShortcutSummary {
   final String id;
   final String name;
   final String? icon;
+  final int color;
   final int stepCount;
 
   ShortcutSummary({
     required this.id,
     required this.name,
     this.icon,
+    this.color = kDefaultShortcutColor,
     required this.stepCount,
   });
 
@@ -993,6 +1003,7 @@ class ShortcutSummary {
     id: j['id'],
     name: j['name'],
     icon: j['icon'],
+    color: j['color'] ?? kDefaultShortcutColor,
     stepCount: j['step_count'],
   );
 
@@ -1000,6 +1011,7 @@ class ShortcutSummary {
     'id': id,
     'name': name,
     'icon': icon,
+    'color': color,
     'step_count': stepCount,
   };
 }

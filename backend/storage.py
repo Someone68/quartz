@@ -5,7 +5,14 @@ from pathlib import Path
 from typing import Annotated
 
 import config
-from models import RunLog, Shortcut, ShortcutSummary, Step, TriggerDef
+from models import (
+    DEFAULT_SHORTCUT_COLOR,
+    RunLog,
+    Shortcut,
+    ShortcutSummary,
+    Step,
+    TriggerDef,
+)
 from pydantic.type_adapter import TypeAdapter
 
 CONFIG_DIR = Path("~/.config/quartz").expanduser()
@@ -33,6 +40,8 @@ def load_all_shortcut_summaries() -> list[ShortcutSummary]:
                     id=data["id"],
                     name=data["name"],
                     icon=data.get("icon"),
+                    # Shortcuts saved before `color` existed have no key.
+                    color=data.get("color", DEFAULT_SHORTCUT_COLOR),
                     step_count=len(data.get("steps", [])),
                 )
             )

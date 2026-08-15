@@ -23,6 +23,12 @@ Container buildStyledIcon(
   );
 }
 
+/// Readable foreground for an arbitrary user-picked background colour.
+Color onColorFor(Color background) =>
+    ThemeData.estimateBrightnessForColor(background) == Brightness.dark
+    ? Colors.white
+    : Colors.black;
+
 IconData? symbolFromName(String? name) {
   final codepoint =
       materialSymbolsIconNameToUnicodeMap[name]; // verify exact map name after import
