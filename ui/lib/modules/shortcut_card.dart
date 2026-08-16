@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:quartz/extensions.dart';
 import 'package:quartz/modules/misc.dart';
 import 'package:quartz/requests.dart';
@@ -6,12 +8,14 @@ import 'package:quartz/types.dart';
 
 class _HoverCard extends StatefulWidget {
   final VoidCallback onTap;
+  final bool selected;
   final Widget child;
-  ColorScheme? colorScheme;
+  final ColorScheme? colorScheme;
 
-  _HoverCard({
+  const _HoverCard({
     super.key,
     required this.onTap,
+    required this.selected,
     required this.child,
     this.colorScheme,
   });
@@ -31,6 +35,7 @@ class _HoverCardState extends State<_HoverCard> {
   @override
   Widget build(BuildContext context) {
     final showHover = _isHovered && !_suppressHover;
+    final scheme = widget.colorScheme ?? Theme.of(context).colorScheme;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -48,12 +53,21 @@ class _HoverCardState extends State<_HoverCard> {
           color: Colors.transparent,
           shadowColor: Colors.black,
           child: Material(
-            color:
-                widget.colorScheme?.surfaceContainerLow ??
-                Theme.of(context).colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(8),
+            color: widget.selected
+                ? scheme.secondaryContainer
+                : scheme.surfaceContainerLow,
+            // Border lives on the Material shape so selecting a card does not
+            // inset its child and shift the layout.
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: widget.selected
+                  ? BorderSide(color: scheme.primary, width: 2)
+                  : BorderSide.none,
+            ),
             child: InkWell(
               borderRadius: BorderRadius.circular(8),
+              // No onDoubleTap: registering one makes every tap wait out the
+              // double-tap timeout before firing. The card times taps itself.
               onTap: widget.onTap,
               child: widget.child,
             ),
@@ -67,9 +81,13 @@ class _HoverCardState extends State<_HoverCard> {
 class _EditButton extends StatefulWidget {
   final VoidCallback onTap;
   final ValueChanged<bool> onHoverEnter;
-  Color? color;
+  final Color? color;
 
-  _EditButton({required this.onTap, required this.onHoverEnter, this.color});
+  const _EditButton({
+    required this.onTap,
+    required this.onHoverEnter,
+    this.color,
+  });
 
   @override
   State<_EditButton> createState() => _EditButtonState();
@@ -120,6 +138,17 @@ class _EditButtonState extends State<_EditButton> {
   }
 }
 
+/// Modifier keys held during a selecting click.
+class SelectModifiers {
+  /// Ctrl (or Meta) — toggle this card without dropping the rest.
+  final bool toggle;
+
+  /// Shift — extend the selection from the anchor to this card.
+  final bool range;
+
+  const SelectModifiers({required this.toggle, required this.range});
+}
+
 class ShortcutCard extends StatefulWidget {
   final ShortcutSummary shortcutSummary;
   final void Function(Shortcut) onEdit;
@@ -127,11 +156,19 @@ class ShortcutCard extends StatefulWidget {
   /// Called after a rename/delete so the dashboard can reload the list.
   final VoidCallback onChanged;
 
+  /// Whether this card is part of the dashboard's current selection.
+  final bool selected;
+
+  /// Single click — the dashboard owns the selection, this only reports intent.
+  final void Function(SelectModifiers) onSelect;
+
   const ShortcutCard({
     super.key,
     required this.shortcutSummary,
     required this.onEdit,
     required this.onChanged,
+    required this.selected,
+    required this.onSelect,
   });
 
   @override
@@ -140,6 +177,32 @@ class ShortcutCard extends StatefulWidget {
 
 class _ShortcutCardState extends State<ShortcutCard> {
   final _hoverCardKey = GlobalKey<_HoverCardState>();
+
+  /// When this card was last clicked, for the hand-rolled double-click check.
+  DateTime? _lastTap;
+
+  /// Every click toggles selection right away — no waiting on a double-tap
+  /// recognizer. A second click inside the double-tap window also runs, and
+  /// its toggle undoes the first one, so a double click lands back where the
+  /// selection started.
+  void _handleTap() {
+    final keys = HardwareKeyboard.instance;
+    widget.onSelect(
+      SelectModifiers(
+        toggle: keys.isControlPressed || keys.isMetaPressed,
+        range: keys.isShiftPressed,
+      ),
+    );
+
+    final now = DateTime.now();
+    final previous = _lastTap;
+    if (previous != null && now.difference(previous) < kDoubleTapTimeout) {
+      _lastTap = null;
+      runShortcutWithLog(context, widget.shortcutSummary.id);
+    } else {
+      _lastTap = now;
+    }
+  }
 
   Future<void> _promptRename() async {
     final controller = TextEditingController(text: widget.shortcutSummary.name);
@@ -213,7 +276,8 @@ class _ShortcutCardState extends State<ShortcutCard> {
       child: _HoverCard(
         key: _hoverCardKey,
         colorScheme: context.hue(Color(widget.shortcutSummary.color)),
-        onTap: () => runShortcutWithLog(context, widget.shortcutSummary.id),
+        selected: widget.selected,
+        onTap: _handleTap,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
           child: Row(
@@ -275,9 +339,13 @@ class _ShortcutCardState extends State<ShortcutCard> {
                 onHoverEnter: (hovered) {
                   _hoverCardKey.currentState?.setSuppressed(hovered);
                 },
-                color: context
-                    .hue(Color(widget.shortcutSummary.color))
-                    .primaryContainer,
+                color: widget.selected
+                    ? context
+                          .hue(Color(widget.shortcutSummary.color))
+                          .surfaceContainerHigh
+                    : context
+                          .hue(Color(widget.shortcutSummary.color))
+                          .primaryContainer,
               ),
             ],
           ),
