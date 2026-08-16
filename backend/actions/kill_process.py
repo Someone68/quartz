@@ -16,17 +16,19 @@ def to_pid(value) -> int:
         raise ValueError(f"Cannot end process: {pid} is not a process ID")
     return pid
 
+
 # By PID
 def kill_pid(pid, force=False):
     p = psutil.Process(to_pid(pid))
     p.kill() if force else p.terminate()
     p.wait(timeout=5)
 
+
 # By name
 def kill_by_name(name, force=False):
     killed = []
-    for p in psutil.process_iter(['name']):
-        if p.info['name'] != name:
+    for p in psutil.process_iter(["name"]):
+        if p.info["name"] != name:
             continue
         try:
             (p.kill if force else p.terminate)()
@@ -37,9 +39,10 @@ def kill_by_name(name, force=False):
     gone, _alive = psutil.wait_procs(killed, timeout=5)
     return [p.pid for p in gone]
 
+
 def _run(inputs: dict, context: dict) -> dict:
     mode = inputs.get("mode")
-    name = inputs.get("name")
+    name = str(inputs.get("name")).lower()
     name_alt = inputs.get("name_alt")
     pid = inputs.get("pid")
     force = inputs.get("force", False)
@@ -87,12 +90,56 @@ ACTION = ActionDef(
     color="amber",
     platforms=["linux", "windows"],
     inputs=[
-        ActionInput(name="mode", type="choice", label="Method", required=True, tooltip="The method to use for killing the process.", options=["PID", "Name"], default="Name"),
-        ActionInput(name="force", type="boolean", label="Force", required=False, tooltip="Terminate the process forcefully.", default=False),
-        ActionInput(name="name", type="app", label="Process name", required=False, tooltip="The process name to kill.", requires={"mode": "Name"}),
-        ActionInput(name="name_alt", type="string", label="Process name (alternative)", required=False, tooltip="The process name to kill. Use if process is not available from the app list. This will take priority over the app list.", requires={"mode": "Name"}),
-        ActionInput(name="pid", type="number", label="Process ID", required=True, tooltip="The process ID to kill.", requires={"mode": "PID"}, default=""),
-        ActionInput(name="error", type="boolean", label="Throw error if failed", required=False, tooltip="Throw an error if the process fails to kill.", default=False),
+        ActionInput(
+            name="mode",
+            type="choice",
+            label="Method",
+            required=True,
+            tooltip="The method to use for killing the process.",
+            options=["PID", "Name"],
+            default="Name",
+        ),
+        ActionInput(
+            name="force",
+            type="boolean",
+            label="Force",
+            required=False,
+            tooltip="Terminate the process forcefully.",
+            default=False,
+        ),
+        ActionInput(
+            name="name",
+            type="app",
+            label="Process name",
+            required=False,
+            tooltip="The process name to kill.",
+            requires={"mode": "Name"},
+        ),
+        ActionInput(
+            name="name_alt",
+            type="string",
+            label="Process name (alternative)",
+            required=False,
+            tooltip="The process name to kill. Use if process is not available from the app list. This will take priority over the app list.",
+            requires={"mode": "Name"},
+        ),
+        ActionInput(
+            name="pid",
+            type="number",
+            label="Process ID",
+            required=True,
+            tooltip="The process ID to kill.",
+            requires={"mode": "PID"},
+            default="",
+        ),
+        ActionInput(
+            name="error",
+            type="boolean",
+            label="Throw error if failed",
+            required=False,
+            tooltip="Throw an error if the process fails to kill.",
+            default=False,
+        ),
     ],
     outputs=[
         ActionOutput(name="killed", type="boolean", label="Killed"),
