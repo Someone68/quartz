@@ -105,7 +105,10 @@ class _ShortcutInspectorState extends State<ShortcutInspector> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Shortcut', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Shortcut Properties',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 16),
 
           Text('Name', style: Theme.of(context).textTheme.labelMedium),

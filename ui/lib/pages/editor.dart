@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:quartz/color_map.dart';
 import 'package:quartz/extensions.dart';
 import 'package:quartz/modules/drop_line.dart';
@@ -241,9 +242,7 @@ class EditorPageState extends State<EditorPage> {
                                 child: StepCard(
                                   isSelected: _shortcutSelected,
                                   label: widget.shortcut.name,
-                                  icon:
-                                      symbolFromName(widget.shortcut.icon) ??
-                                      Icons.warning_rounded,
+                                  icon: Symbols.radio_button_checked,
                                   iconColor: context
                                       .hue(Color(widget.shortcut.color))
                                       .primaryContainer,

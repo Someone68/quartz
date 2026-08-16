@@ -7,8 +7,14 @@ import 'package:quartz/types.dart';
 class _HoverCard extends StatefulWidget {
   final VoidCallback onTap;
   final Widget child;
+  ColorScheme? colorScheme;
 
-  const _HoverCard({super.key, required this.onTap, required this.child});
+  _HoverCard({
+    super.key,
+    required this.onTap,
+    required this.child,
+    this.colorScheme,
+  });
 
   @override
   State<_HoverCard> createState() => _HoverCardState();
@@ -42,7 +48,9 @@ class _HoverCardState extends State<_HoverCard> {
           color: Colors.transparent,
           shadowColor: Colors.black,
           child: Material(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            color:
+                widget.colorScheme?.surfaceContainerLow ??
+                Theme.of(context).colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(8),
             child: InkWell(
               borderRadius: BorderRadius.circular(8),
@@ -59,8 +67,9 @@ class _HoverCardState extends State<_HoverCard> {
 class _EditButton extends StatefulWidget {
   final VoidCallback onTap;
   final ValueChanged<bool> onHoverEnter;
+  Color? color;
 
-  const _EditButton({required this.onTap, required this.onHoverEnter});
+  _EditButton({required this.onTap, required this.onHoverEnter, this.color});
 
   @override
   State<_EditButton> createState() => _EditButtonState();
@@ -90,7 +99,9 @@ class _EditButtonState extends State<_EditButton> {
             duration: const Duration(milliseconds: 150),
             scale: _isHovered ? 1.12 : 1.0,
             child: Material(
-              color: Theme.of(context).colorScheme.primaryContainer,
+              color:
+                  widget.color ??
+                  Theme.of(context).colorScheme.primaryContainer,
               shape: const CircleBorder(),
               elevation: _isHovered ? 6 : 0,
               child: InkWell(
@@ -197,91 +208,79 @@ class _ShortcutCardState extends State<ShortcutCard> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 270.0,
-      height: 160.0,
+    return ConstrainedBox(
+      constraints: const BoxConstraints.expand(height: 80.0),
       child: _HoverCard(
         key: _hoverCardKey,
+        colorScheme: context.hue(Color(widget.shortcutSummary.color)),
         onTap: () => runShortcutWithLog(context, widget.shortcutSummary.id),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Builder(
-                    builder: (context) {
-                      final bg = context
-                          .hue(Color(widget.shortcutSummary.color))
-                          .primaryContainer;
-                      return CircleAvatar(
-                        radius: 16.0,
-                        backgroundColor: bg,
-                        // The user picks any hue, so the glyph has to follow the
-                        // background's brightness or it disappears on it.
-                        foregroundColor: onColorFor(bg),
-                        child: Icon(
-                          symbolFromName(widget.shortcutSummary.icon) ??
-                              Icons.star_rounded,
-                          size: 24.0,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 4.0,
+                          backgroundColor: context
+                              .hue(Color(widget.shortcutSummary.color))
+                              .primary,
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    widget.shortcutSummary.name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    '${widget.shortcutSummary.stepCount} actions',
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                ],
-              ),
-            ),
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  tooltip: 'Options',
-                  onOpened: () =>
-                      _hoverCardKey.currentState?.setSuppressed(true),
-                  onCanceled: () =>
-                      _hoverCardKey.currentState?.setSuppressed(false),
-                  onSelected: (value) {
-                    _hoverCardKey.currentState?.setSuppressed(false);
-                    if (value == 'rename') _promptRename();
-                    if (value == 'delete') _promptDelete();
-                  },
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(value: 'rename', child: Text('Rename')),
-                    PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        const SizedBox(width: 8.0),
+                        Expanded(
+                          child: Text(
+                            widget.shortcutSummary.name,
+                            style: Theme.of(context).textTheme.titleLarge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '${widget.shortcutSummary.stepCount} actions',
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
                   ],
                 ),
               ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: _EditButton(
-                  onTap: () {
-                    // Fetch full shortcut, then hand off to the shell which
-                    // swaps to the editor tab in-place (keeps the nav rail).
-                    getShortcut(widget.shortcutSummary.id).then(widget.onEdit);
-                  },
-                  onHoverEnter: (hovered) {
-                    _hoverCardKey.currentState?.setSuppressed(hovered);
-                  },
-                ),
+              const SizedBox(width: 8.0),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                tooltip: 'Options',
+                onOpened: () => _hoverCardKey.currentState?.setSuppressed(true),
+                onCanceled: () =>
+                    _hoverCardKey.currentState?.setSuppressed(false),
+                onSelected: (value) {
+                  _hoverCardKey.currentState?.setSuppressed(false);
+                  if (value == 'rename') _promptRename();
+                  if (value == 'delete') _promptDelete();
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: 'rename', child: Text('Rename')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
               ),
-            ),
-          ],
+              _EditButton(
+                onTap: () {
+                  // Fetch full shortcut, then hand off to the shell which
+                  // swaps to the editor tab in-place (keeps the nav rail).
+                  getShortcut(widget.shortcutSummary.id).then(widget.onEdit);
+                },
+                onHoverEnter: (hovered) {
+                  _hoverCardKey.currentState?.setSuppressed(hovered);
+                },
+                color: context
+                    .hue(Color(widget.shortcutSummary.color))
+                    .primaryContainer,
+              ),
+            ],
+          ),
         ),
       ),
     );

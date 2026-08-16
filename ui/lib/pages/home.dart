@@ -37,18 +37,19 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(title: const Text('Shortcuts')),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.0),
-        child: Wrap(
-          spacing: 16.0,
-          runSpacing: 16.0,
-          children: [
-            ..._shortcutSummaries.map(
-              (summary) => ShortcutCard(
-                shortcutSummary: summary,
-                onEdit: widget.onEdit,
-                onChanged: _loadShortcuts,
-              ),
-            ),
-          ],
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 500.0,
+            mainAxisExtent: 80,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
+          itemBuilder: (context, index) => ShortcutCard(
+            shortcutSummary: _shortcutSummaries[index],
+            onEdit: widget.onEdit,
+            onChanged: _loadShortcuts,
+          ),
+          itemCount: _shortcutSummaries.length,
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
