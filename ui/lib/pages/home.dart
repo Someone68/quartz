@@ -163,10 +163,14 @@ class _HomePageState extends State<HomePage> {
             ? [
                 IconButton(
                   icon: const Icon(Icons.play_arrow),
-                  tooltip: _selected.length == 1
-                      ? 'Run'
-                      : 'Cannot run more than one shortcut at a time',
-                  onPressed: _selected.length == 1
+                  tooltip: _selected.length != 1
+                      ? 'Cannot run more than one shortcut at a time'
+                      : running.contains(_selected.first)
+                      ? 'Already running'
+                      : 'Run',
+                  onPressed:
+                      _selected.length == 1 &&
+                          !running.contains(_selected.first)
                       ? () => runShortcutWithLog(context, _selected.first)
                       : null,
                 ),
