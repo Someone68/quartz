@@ -193,8 +193,23 @@ class _TopNotificationState extends State<_TopNotification>
   }
 }
 
-void runShortcutWithLog(BuildContext context, String shortcutId) {
-  runShortcut(shortcutId)
+/// Ids of shortcuts with a run request in flight. Shared state: a shortcut can
+/// be started from the dashboard or from the editor, and both need to know a
+/// run is already going so they can disable their own entry points.
+final ValueNotifier<Set<String>> runningShortcutIds = ValueNotifier(
+  const <String>{},
+);
+
+bool isShortcutRunning(String shortcutId) =>
+    runningShortcutIds.value.contains(shortcutId);
+
+Future<void> runShortcutWithLog(BuildContext context, String shortcutId) {
+  // Guard here as well as in the UI — the callers disable their buttons, but
+  // hotkeys and double clicks can still land while a run is in flight.
+  if (isShortcutRunning(shortcutId)) return Future.value();
+  runningShortcutIds.value = {...runningShortcutIds.value, shortcutId};
+
+  return runShortcut(shortcutId)
       .then((log) {
         // The run is async; the caller's page may be gone by the time it ends.
         if (!context.mounted) return;
@@ -240,6 +255,10 @@ void runShortcutWithLog(BuildContext context, String shortcutId) {
             ],
           ),
         );
+      })
+      .whenComplete(() {
+        runningShortcutIds.value = {...runningShortcutIds.value}
+          ..remove(shortcutId);
       });
 }
 

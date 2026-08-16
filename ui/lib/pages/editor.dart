@@ -207,6 +207,12 @@ class EditorPageState extends State<EditorPage> {
       );
     }
 
+    // Run state lives in the shared registry (see misc.dart) so a run started
+    // from the dashboard disables this button too, and vice versa.
+    void run(BuildContext context, String shortcutId) {
+      runShortcutWithLog(context, shortcutId);
+    }
+
     return Scaffold(
       body: ValueListenableBuilder<String?>(
         valueListenable: _draggingId,
@@ -341,21 +347,6 @@ class EditorPageState extends State<EditorPage> {
                             onPressed: () => save(context),
                             style: ButtonStyle(
                               backgroundColor: WidgetStateProperty.all(
-                                Theme.of(context).colorScheme.primaryContainer,
-                              ),
-                              foregroundColor: WidgetStateProperty.all(
-                                Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                            child: const Text('Save'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () =>
-                                runShortcutWithLog(context, widget.shortcut.id),
-                            style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(
                                 Theme.of(
                                   context,
                                 ).colorScheme.secondaryContainer,
@@ -366,7 +357,62 @@ class EditorPageState extends State<EditorPage> {
                                 ).colorScheme.onSecondaryContainer,
                               ),
                             ),
-                            child: const Text('Run'),
+                            child: const Text('Save'),
+                          ),
+                          // ElevatedButton(
+                          //   onPressed: () => print(_running),
+                          //   style: ButtonStyle(
+                          //     backgroundColor: WidgetStateProperty.all(
+                          //       Theme.of(
+                          //         context,
+                          //       ).colorScheme.secondaryContainer,
+                          //     ),
+                          //     foregroundColor: WidgetStateProperty.all(
+                          //       Theme.of(
+                          //         context,
+                          //       ).colorScheme.onSecondaryContainer,
+                          //     ),
+                          //   ),
+                          //   child: const Text('Get running state'),
+                          // ),
+                          ValueListenableBuilder<Set<String>>(
+                            valueListenable: runningShortcutIds,
+                            builder: (context, runningIds, _) => ElevatedButton(
+                              onPressed: runningIds.contains(widget.shortcut.id)
+                                  ? null
+                                  : () => run(context, widget.shortcut.id),
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    WidgetStateProperty.resolveWith((states) {
+                                      final scheme = Theme.of(
+                                        context,
+                                      ).colorScheme;
+                                      if (states.contains(
+                                        WidgetState.disabled,
+                                      )) {
+                                        return scheme.onSurface.withValues(
+                                          alpha: 0.12,
+                                        );
+                                      }
+                                      return scheme.primaryContainer;
+                                    }),
+                                foregroundColor:
+                                    WidgetStateProperty.resolveWith((states) {
+                                      final scheme = Theme.of(
+                                        context,
+                                      ).colorScheme;
+                                      if (states.contains(
+                                        WidgetState.disabled,
+                                      )) {
+                                        return scheme.onSurface.withValues(
+                                          alpha: 0.38,
+                                        );
+                                      }
+                                      return scheme.onPrimaryContainer;
+                                    }),
+                              ),
+                              child: const Text('Run'),
+                            ),
                           ),
                         ],
                       ),

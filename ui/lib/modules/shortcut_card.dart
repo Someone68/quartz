@@ -162,6 +162,10 @@ class ShortcutCard extends StatefulWidget {
   /// Single click — the dashboard owns the selection, this only reports intent.
   final void Function(SelectModifiers) onSelect;
 
+  /// A run of this shortcut is in flight — the card greys out and refuses to
+  /// start another one until it finishes.
+  final bool running;
+
   const ShortcutCard({
     super.key,
     required this.shortcutSummary,
@@ -169,6 +173,7 @@ class ShortcutCard extends StatefulWidget {
     required this.onChanged,
     required this.selected,
     required this.onSelect,
+    this.running = false,
   });
 
   @override
@@ -198,7 +203,10 @@ class _ShortcutCardState extends State<ShortcutCard> {
     final previous = _lastTap;
     if (previous != null && now.difference(previous) < kDoubleTapTimeout) {
       _lastTap = null;
-      runShortcutWithLog(context, widget.shortcutSummary.id);
+      // Selection still works while running; only the run is blocked.
+      if (!widget.running) {
+        runShortcutWithLog(context, widget.shortcutSummary.id);
+      }
     } else {
       _lastTap = now;
     }
@@ -278,76 +286,93 @@ class _ShortcutCardState extends State<ShortcutCard> {
         colorScheme: context.hue(Color(widget.shortcutSummary.color)),
         selected: widget.selected,
         onTap: _handleTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 4.0,
-                          backgroundColor: context
-                              .hue(Color(widget.shortcutSummary.color))
-                              .primary,
-                        ),
-                        const SizedBox(width: 8.0),
-                        Expanded(
-                          child: Text(
-                            widget.shortcutSummary.name,
-                            style: Theme.of(context).textTheme.titleLarge,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 150),
+          opacity: widget.running ? 0.45 : 1.0,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (widget.running)
+                            SizedBox(
+                              width: 8.0,
+                              height: 8.0,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.0,
+                                color: context
+                                    .hue(Color(widget.shortcutSummary.color))
+                                    .primary,
+                              ),
+                            )
+                          else
+                            CircleAvatar(
+                              radius: 4.0,
+                              backgroundColor: context
+                                  .hue(Color(widget.shortcutSummary.color))
+                                  .primary,
+                            ),
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: Text(
+                              widget.shortcutSummary.name,
+                              style: Theme.of(context).textTheme.titleLarge,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '${widget.shortcutSummary.stepCount} actions',
-                      style: Theme.of(context).textTheme.labelMedium,
-                    ),
+                        ],
+                      ),
+                      Text(
+                        '${widget.shortcutSummary.stepCount} actions',
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'Options',
+                  onOpened: () =>
+                      _hoverCardKey.currentState?.setSuppressed(true),
+                  onCanceled: () =>
+                      _hoverCardKey.currentState?.setSuppressed(false),
+                  onSelected: (value) {
+                    _hoverCardKey.currentState?.setSuppressed(false);
+                    if (value == 'rename') _promptRename();
+                    if (value == 'delete') _promptDelete();
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'rename', child: Text('Rename')),
+                    PopupMenuItem(value: 'delete', child: Text('Delete')),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8.0),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                tooltip: 'Options',
-                onOpened: () => _hoverCardKey.currentState?.setSuppressed(true),
-                onCanceled: () =>
-                    _hoverCardKey.currentState?.setSuppressed(false),
-                onSelected: (value) {
-                  _hoverCardKey.currentState?.setSuppressed(false);
-                  if (value == 'rename') _promptRename();
-                  if (value == 'delete') _promptDelete();
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'rename', child: Text('Rename')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete')),
-                ],
-              ),
-              _EditButton(
-                onTap: () {
-                  // Fetch full shortcut, then hand off to the shell which
-                  // swaps to the editor tab in-place (keeps the nav rail).
-                  getShortcut(widget.shortcutSummary.id).then(widget.onEdit);
-                },
-                onHoverEnter: (hovered) {
-                  _hoverCardKey.currentState?.setSuppressed(hovered);
-                },
-                color: widget.selected
-                    ? context
-                          .hue(Color(widget.shortcutSummary.color))
-                          .surfaceContainerHigh
-                    : context
-                          .hue(Color(widget.shortcutSummary.color))
-                          .primaryContainer,
-              ),
-            ],
+                _EditButton(
+                  onTap: () {
+                    // Fetch full shortcut, then hand off to the shell which
+                    // swaps to the editor tab in-place (keeps the nav rail).
+                    getShortcut(widget.shortcutSummary.id).then(widget.onEdit);
+                  },
+                  onHoverEnter: (hovered) {
+                    _hoverCardKey.currentState?.setSuppressed(hovered);
+                  },
+                  color: widget.selected
+                      ? context
+                            .hue(Color(widget.shortcutSummary.color))
+                            .surfaceContainerHigh
+                      : context
+                            .hue(Color(widget.shortcutSummary.color))
+                            .primaryContainer,
+                ),
+              ],
+            ),
           ),
         ),
       ),
