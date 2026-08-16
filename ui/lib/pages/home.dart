@@ -197,6 +197,13 @@ class _HomePageState extends State<HomePage> {
         title: Text(selecting ? '${_selected.length} selected' : 'Shortcuts'),
         actions: selecting
             ? [
+                if (_selected.length == 1)
+                  IconButton(
+                    icon: const Icon(Icons.play_circle),
+                    tooltip: 'Run selected',
+                    onPressed: () =>
+                        runShortcutWithLog(context, _selected.first),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.play_arrow),
                   tooltip: _selected.length != 1
