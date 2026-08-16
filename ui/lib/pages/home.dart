@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quartz/modules/misc.dart';
 import 'package:quartz/requests.dart';
 import 'package:quartz/types.dart';
 import 'package:quartz/modules/shortcut_card.dart';
@@ -148,6 +149,13 @@ class _HomePageState extends State<HomePage> {
         title: Text(selecting ? '${_selected.length} selected' : 'Shortcuts'),
         actions: selecting
             ? [
+                if (_selected.length == 1)
+                  IconButton(
+                    icon: const Icon(Icons.play_circle),
+                    tooltip: 'Run selected',
+                    onPressed: () =>
+                        runShortcutWithLog(context, _selected.first),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.select_all),
                   tooltip: 'Select all',
