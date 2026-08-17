@@ -1,12 +1,13 @@
+import io
 import os
 import secrets
+import sys
 from contextlib import asynccontextmanager
 
-import get_apps
-import get_brightness
-from get_apps import launch_by_name, load_apps
 import config
 import executor
+import get_apps
+import get_brightness
 import paths
 import registry
 import runtime
@@ -16,9 +17,16 @@ import trigger_manager
 import trigger_registry
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from get_apps import launch_by_name, load_apps
 from models import Shortcut
 from pydantic import BaseModel
 from version import __version__
+
+# unvicorn sucks so we need this on windows
+if sys.stdout is None:
+    sys.stdout = io.StringIO()
+if sys.stderr is None:
+    sys.stderr = io.StringIO()
 
 
 class RenameRequest(BaseModel):
@@ -74,9 +82,7 @@ async def require_token(request: Request, call_next):
     if request.url.path not in _PUBLIC_PATHS:
         expected = runtime.get_token()
         presented = request.headers.get("Authorization", "")
-        if not expected or not secrets.compare_digest(
-            presented, f"Bearer {expected}"
-        ):
+        if not expected or not secrets.compare_digest(presented, f"Bearer {expected}"):
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
     return await call_next(request)
 
@@ -177,6 +183,7 @@ def list_actions():
 def list_triggers():
     return trigger_registry.all_triggers()
 
+
 @app.post("/launch-by-name")
 def launch_app_by_name(req: get_apps.LaunchByName):
     try:
@@ -184,9 +191,11 @@ def launch_app_by_name(req: get_apps.LaunchByName):
     except LookupError as e:
         raise HTTPException(404, str(e))
 
+
 @app.get("/apps")
 def list_apps():
     return {"apps": load_apps()}
+
 
 if __name__ == "__main__":
     import uvicorn
