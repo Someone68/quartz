@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 
 import 'config.dart';
 import 'extensions.dart';
@@ -8,8 +9,34 @@ import 'extensions.dart';
 import 'shell.dart';
 import 'theme_notifier.dart';
 
+const _lockPort = 45123; // pick something unused
+
+Future<bool> _claimSingleInstance() async {
+  try {
+    final server = await ServerSocket.bind(
+      InternetAddress.loopbackIPv4,
+      _lockPort,
+      shared: false,
+    );
+    server.listen((sock) {
+      // second instance pinged us: focus window here
+      // windowManager.show(); windowManager.focus();
+      sock.destroy();
+    });
+    return true;
+  } on SocketException {
+    // tell the running instance to focus, then quit
+    try {
+      final s = await Socket.connect(InternetAddress.loopbackIPv4, _lockPort);
+      s.destroy();
+    } catch (_) {}
+    return false;
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (!await _claimSingleInstance()) exit(0);
   // Backend host/port come from config.json; every request builds on this, so
   // it has to land before any widget can fire one off.
   loadBackendConfig();
