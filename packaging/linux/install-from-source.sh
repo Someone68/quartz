@@ -33,6 +33,7 @@ install -m755 "$ROOT/dist/quartzd" "$APPDIR/quartzd"
 rm -rf "$APPDIR/ui"
 cp -r "$ROOT/ui/build/linux/x64/release/bundle" "$APPDIR/ui"
 ln -sf "$APPDIR/ui/quartz" "$PREFIX/bin/quartz"
+install -m755 "$ROOT/packaging/linux/uninstall-from-source.sh" "$APPDIR/uninstall.sh"
 
 "$VENV/bin/python" "$ROOT/packaging/gen_icon.py" \
     "$PREFIX/share/icons/hicolor/256x256/apps/quartz.png" 256
@@ -63,3 +64,4 @@ systemctl --user daemon-reload
 systemctl --user enable --now quartzd
 
 echo "Done. UI: 'quartz' or your app menu. Daemon: systemctl --user status quartzd"
+echo "Uninstall script: $APPDIR/uninstall.sh"
