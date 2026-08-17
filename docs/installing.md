@@ -41,6 +41,8 @@ Windows (Powershell):
 ```bash
 git clone https://github.com/Someone68/quartz.git
 cd quartz
-./packaging/windows/build-installer.ps1
+.\packaging\windows\build-installer.ps1
 # .msix installer built in dist/quartz-setup-*.exe
+
+.\dist\quartz-setup-*.exe # replace * with version or run from file explorer
 ```
