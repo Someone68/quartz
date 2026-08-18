@@ -69,12 +69,14 @@ hiddenimports = [
     "watchdog.observers",
     "zoneinfo",
     # Tray + notifications: backends are picked at runtime by platform.
-    "pystray",
     "plyer.platforms",
 ]
 
 if IS_LINUX:
     hiddenimports += [
+        # Linux tray is StatusNotifierItem over D-Bus, imported lazily by tray.
+        "tray_sni",
+        "dbus_fast",
         "evdev",
         "pulsectl",
         "pynput.keyboard._xorg",
@@ -84,6 +86,7 @@ if IS_LINUX:
     ]
 if IS_WINDOWS:
     hiddenimports += [
+        "pystray",
         "comtypes",
         "pycaw",
         "pynput.keyboard._win32",
@@ -101,7 +104,10 @@ a = Analysis(
     # be on the search path when the spec is run from the repo root.
     pathex=[str(BACKEND)],
     binaries=[],
-    datas=plugin_datas("actions") + plugin_datas("triggers"),
+    # icon.png lands at the archive root, where paths.ICON_FILE looks for it.
+    datas=plugin_datas("actions")
+    + plugin_datas("triggers")
+    + [(str(ROOT / "packaging" / "icon.png"), ".")],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
