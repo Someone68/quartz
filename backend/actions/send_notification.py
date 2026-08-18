@@ -1,6 +1,7 @@
+from desktop_notifier import DesktopNotifierSync
 from models import ActionDef, ActionInput
-from plyer import notification
-import platform, subprocess
+
+_notifier = DesktopNotifierSync(app_name="Quartz", app_icon=None)
 
 
 def _run(inputs: dict, context: dict) -> dict:
@@ -10,15 +11,7 @@ def _run(inputs: dict, context: dict) -> dict:
         timeout = float(inputs.get("timeout") or 5)
     except (TypeError, ValueError):
         timeout = 5.0
-
-    if platform.system() == "Linux":
-        subprocess.run(
-            ["notify-send", "-t", str(int(timeout * 1000)), title, message],
-            check=False,
-        )
-    else:
-        assert notification is not None
-        notification.notify(title=title, message=message, timeout=int(timeout)) # type: ignore[reportOptionalCall]
+    _notifier.send(title=title, message=message, timeout=int(timeout))
     return {}
 
 
@@ -31,9 +24,28 @@ ACTION = ActionDef(
     color="amber",
     platforms=["linux", "windows"],
     inputs=[
-        ActionInput(name="title", type="string", label="Title", required=False, tooltip="The title of the notification."),
-        ActionInput(name="message", type="string", label="Message", required=False, tooltip="The message of the notification."),
-        ActionInput(name="timeout", type="number", label="Timeout (seconds)", required=False, default=5, tooltip="The duration the notification will be displayed."),
+        ActionInput(
+            name="title",
+            type="string",
+            label="Title",
+            required=False,
+            tooltip="The title of the notification.",
+        ),
+        ActionInput(
+            name="message",
+            type="string",
+            label="Message",
+            required=False,
+            tooltip="The message of the notification.",
+        ),
+        ActionInput(
+            name="timeout",
+            type="number",
+            label="Timeout (seconds)",
+            required=False,
+            default=5,
+            tooltip="The duration the notification will be displayed.",
+        ),
     ],
     outputs=[],
     run=_run,

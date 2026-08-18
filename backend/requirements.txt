@@ -9,7 +9,7 @@ psutil
 pyperclip
 croniter
 pillow
-plyer
+desktop-notifier
 requests
 tzlocal
 screen-brightness-control
