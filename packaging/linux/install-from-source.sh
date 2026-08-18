@@ -36,11 +36,18 @@ ln -sf "$APPDIR/ui/quartz" "$PREFIX/bin/quartz"
 install -m755 "$ROOT/packaging/linux/uninstall-from-source.sh" "$APPDIR/uninstall.sh"
 
 "$VENV/bin/python" "$ROOT/packaging/gen_icon.py" \
-    "$PREFIX/share/icons/hicolor/256x256/apps/quartz.png" 256
+    "$PREFIX/share/icons/hicolor/256x256/apps/quartz.png" 256 "$ROOT/packaging/icon.png"
 
 # Desktop entry pointing at the user-local launcher.
 sed "s#^Exec=.*#Exec=$PREFIX/bin/quartz#" "$ROOT/packaging/linux/quartz.desktop" \
     > "$PREFIX/share/applications/quartz.desktop"
+
+# Desktop environments serve icons and menu entries from caches; without this a
+# reinstall keeps showing the previous icon.
+command -v gtk-update-icon-cache >/dev/null 2>&1 \
+    && gtk-update-icon-cache -qtf "$PREFIX/share/icons/hicolor" 2>/dev/null || true
+command -v update-desktop-database >/dev/null 2>&1 \
+    && update-desktop-database "$PREFIX/share/applications" 2>/dev/null || true
 
 # User unit with the ExecStart pointing at the user-local daemon.
 cat > "$HOME/.config/systemd/user/quartzd.service" <<EOF
