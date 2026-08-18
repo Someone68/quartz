@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 
+import paths
 import trigger_manager
 
 
@@ -26,16 +27,20 @@ def has_gui_session() -> bool:
     return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
 
 
-def _icon_image():
-    """Build the tray image in memory (no bundled asset to ship or freeze)."""
+def _icon_image(size: int = 64):
     from PIL import Image, ImageDraw
 
-    size = 64
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    try:
+        with Image.open(paths.ICON_FILE) as img:
+            return img.convert("RGBA").resize((size, size))
+    except Exception as e:
+        print(f"Tray: falling back to drawn icon ({e}).")
+
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle([4, 4, size - 4, size - 4], radius=14, fill=(124, 77, 255, 255))
-    d.text((size // 2, size // 2), "Q", fill="white", anchor="mm")
-    return img
+    d.rounded_rectangle([4, 4, 60, 60], radius=14, fill=(124, 77, 255, 255))
+    d.text((32, 32), "Q", fill="white", anchor="mm")
+    return img.resize((size, size)) if size != 64 else img
 
 
 def _open_ui() -> None:
@@ -73,18 +78,35 @@ def _quit() -> None:
     os.kill(os.getpid(), signal.SIGINT)
 
 
+def _set_paused(paused: bool) -> None:
+    if paused:
+        trigger_manager.stop_all()
+    else:
+        trigger_manager.start_all()
+
+
+def _run_sni(port: int) -> None:
+    import tray_sni
+
+    tray_sni.run(
+        title="Quartz",
+        header=f"Quartz — port {port}",
+        # Full-size source: tray_sni downscales to each panel size it exports.
+        pixmap_image=_icon_image(256),
+        on_open=_open_ui,
+        on_toggle_pause=_set_paused,
+        on_quit=_quit,
+    )
+
+
 def _build_icon(port: int):
     import pystray
 
     paused = {"on": False}
 
     def toggle_pause(icon, item):
-        if paused["on"]:
-            trigger_manager.start_all()
-            paused["on"] = False
-        else:
-            trigger_manager.stop_all()
-            paused["on"] = True
+        paused["on"] = not paused["on"]
+        _set_paused(paused["on"])
 
     menu = pystray.Menu(
         pystray.MenuItem(f"Quartz — port {port}", None, enabled=False),
@@ -109,10 +131,13 @@ def start(port: int) -> None:
 
     def run():
         try:
-            _build_icon(port).run()
+            if sys.platform.startswith("linux"):
+                _run_sni(port)
+            else:
+                _build_icon(port).run()
         except Exception as e:
-            # A missing tray backend (e.g. no AppIndicator) must not take the
-            # daemon down; triggers keep running regardless.
+            # A missing tray host (no session bus, no SNI watcher) must not take
+            # the daemon down; triggers keep running regardless.
             print(f"Tray: disabled ({e}).")
 
     threading.Thread(target=run, name="tray", daemon=True).start()

@@ -12,3 +12,9 @@ BUNDLE_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 
 ACTIONS_DIR = BUNDLE_DIR / "actions"
 TRIGGERS_DIR = BUNDLE_DIR / "triggers"
+
+ICON_FILE = (
+    BUNDLE_DIR / "icon.png"
+    if IS_FROZEN
+    else Path(__file__).resolve().parent.parent / "packaging" / "icon.png"
+)

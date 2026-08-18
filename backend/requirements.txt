@@ -13,8 +13,11 @@ desktop-notifier
 requests
 tzlocal
 screen-brightness-control
-pystray
+pystray; sys_platform == "win32"
 
+# Tray: StatusNotifierItem over D-Bus. pystray's Linux backends need GTK3 via
+# PyGObject, which a frozen single-file daemon cannot ship portably.
+dbus-fast; sys_platform == "linux"
 pyxdg; sys_platform == "linux"
 cairosvg; sys_platform == "linux"
 pulsectl; sys_platform == "linux"
