@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import webbrowser
 from urllib.parse import quote
+from subproc import clean_env
 from models import ActionDef, ActionInput, ActionOutput
 
 
@@ -42,7 +43,8 @@ def _run(inputs: dict, context: dict) -> dict:
 
     rc = subprocess.run(
         ["xdg-open", mailto],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        env=clean_env(),
     ).returncode
     if rc == 0:
         return {"mailto": mailto}

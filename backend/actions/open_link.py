@@ -2,6 +2,7 @@ import shutil
 import subprocess
 import sys
 
+from subproc import clean_env
 from models import ActionDef, ActionInput
 
 
@@ -17,7 +18,7 @@ def _run(inputs: dict, context: dict) -> dict:
     if not shutil.which("xdg-open"):
         raise RuntimeError("xdg-open not found")
 
-    subprocess.run(["xdg-open", url])
+    subprocess.run(["xdg-open", url], env=clean_env())
     return {}
 
 

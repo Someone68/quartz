@@ -38,10 +38,11 @@ def plugin_datas(name):
 
 
 # Modules nothing on the main.py import graph reaches, so Analysis cannot see
-# them. dialogs is imported only by action files, which are data. The uvicorn
-# and pynput submodules are selected by string at runtime.
+# them. dialogs and subproc are imported only by action files, which are data.
+# The uvicorn and pynput submodules are selected by string at runtime.
 hiddenimports = [
     "dialogs",
+    "subproc",
     "uvicorn.logging",
     "uvicorn.loops.auto",
     "uvicorn.loops.asyncio",
