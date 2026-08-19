@@ -2,6 +2,7 @@ import os
 
 from models import ActionDef, ActionInput, ActionOutput
 import platform, subprocess
+from subproc import clean_env
 
 def _run(inputs: dict, context: dict) -> dict:
     action = inputs["action"]
@@ -28,7 +29,7 @@ def _run(inputs: dict, context: dict) -> dict:
     else:
         raise ValueError(system)
     cmd = cmds[action]
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, env=clean_env())
     return {}
 
 

@@ -1,5 +1,7 @@
 import subprocess
 
+from subproc import clean_env
+
 from models import ActionDef, ActionInput, ActionOutput
 
 
@@ -14,6 +16,7 @@ def _run(inputs: dict, context: dict) -> dict:
         capture_output=True,
         text=True,
         timeout=float(timeout),
+        env=clean_env(),
     )
 
     if willabort and result.returncode != 0:

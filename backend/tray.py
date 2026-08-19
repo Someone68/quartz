@@ -15,6 +15,7 @@ import threading
 
 import paths
 import trigger_manager
+from subproc import clean_env
 
 
 def has_gui_session() -> bool:
@@ -54,6 +55,7 @@ def _open_ui() -> None:
             [exe],
             start_new_session=(sys.platform != "win32"),
             close_fds=True,
+            env=clean_env(),
         )
     except Exception as e:
         print(f"Tray: failed to open UI ({e}).")

@@ -2,6 +2,8 @@ from models import ActionDef, ActionInput
 from plyer import notification
 import platform, subprocess
 
+from subproc import clean_env
+
 
 def _run(inputs: dict, context: dict) -> dict:
     title = str(inputs.get("title") or "")
@@ -15,6 +17,7 @@ def _run(inputs: dict, context: dict) -> dict:
         subprocess.run(
             ["notify-send", "-t", str(int(timeout * 1000)), title, message],
             check=False,
+            env=clean_env(),
         )
     else:
         assert notification is not None
