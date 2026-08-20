@@ -163,7 +163,6 @@ new_id = lambda: str(uuid4())
 class Trigger(BaseModel):
     id: str = Field(default_factory=new_id)
     type: Literal[
-        "hotkey",
         "schedule",
         "file_watch",
         "directory_contents_watch",
@@ -171,8 +170,6 @@ class Trigger(BaseModel):
         "app_open",
         "app_close",
         "clipboard",
-        "network",
-        "idle",
         "startup",
         "manual",
     ]
@@ -181,7 +178,6 @@ class Trigger(BaseModel):
 
 class TriggerDef(BaseModel):
     type: Literal[
-        "hotkey",
         "schedule",
         "file_watch",
         "directory_contents_watch",
@@ -189,8 +185,6 @@ class TriggerDef(BaseModel):
         "app_open",
         "app_close",
         "clipboard",
-        "network",
-        "idle",
         "startup",
         "manual",
     ]

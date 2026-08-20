@@ -743,7 +743,6 @@ class TriggerDef {
 /// Valid trigger types. Mirrors the `Trigger.type` Literal in backend
 /// models.py — keep the two in sync.
 const List<String> kTriggerTypes = [
-  'hotkey',
   'schedule',
   'file_watch',
   'directory_watch',
@@ -751,8 +750,6 @@ const List<String> kTriggerTypes = [
   'app_open',
   'app_close',
   'clipboard',
-  'network',
-  'idle',
   'startup',
   'manual',
 ];
