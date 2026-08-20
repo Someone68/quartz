@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart';
+import 'package:quartz/backend_status.dart';
 import 'package:quartz/modules/misc.dart';
 import 'package:quartz/requests.dart';
 import 'package:quartz/types.dart';
@@ -29,22 +32,55 @@ class _HomePageState extends State<HomePage> {
   /// Where a shift-click range starts from.
   int? _anchorIndex;
 
+  bool _loadInFlight = false;
+  bool _loading = false;
+
   Future<void> _loadShortcuts() async {
-    final summaries = await getShortcuts();
-    if (!mounted) return;
-    setState(() {
-      _shortcutSummaries = summaries;
-      // Drop selections for shortcuts that no longer exist.
-      final ids = summaries.map((s) => s.id).toSet();
-      _selected.removeWhere((id) => !ids.contains(id));
-      _anchorIndex = null;
-    });
+    if (_loadInFlight) return;
+    _loadInFlight = true;
+    _loading = true;
+    try {
+      final summaries = await getShortcuts();
+      if (!mounted) return;
+      setState(() {
+        _shortcutSummaries = summaries;
+        // Drop selections for shortcuts that no longer exist.
+        final ids = summaries.map((s) => s.id).toSet();
+        _selected.removeWhere((id) => !ids.contains(id));
+        _anchorIndex = null;
+        _loading = false;
+      });
+    } on ClientException {
+      backendStatus.markOffline();
+      if (!mounted) return;
+      setState(() => _loading = true);
+    } finally {
+      _loadInFlight = false;
+      _loading = false;
+    }
   }
+
+  String? error;
+  StreamSubscription<BackendStatus>? _sub;
 
   @override
   void initState() {
     super.initState();
-    _loadShortcuts();
+    _sub = backendStatus.status.listen((status) {
+      if (!mounted) return;
+      if (status == BackendStatus.online) _loadShortcuts();
+    });
+    if (backendStatus.current == BackendStatus.online) {
+      _loadShortcuts();
+    } else {
+      backendStatus.refresh();
+    }
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   void _handleSelect(int index, SelectModifiers mods) {
@@ -205,23 +241,28 @@ class _HomePageState extends State<HomePage> {
             onTap: _clearSelection,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 500.0,
-                  mainAxisExtent: 80,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemBuilder: (context, index) => ShortcutCard(
-                  shortcutSummary: _shortcutSummaries[index],
-                  onEdit: widget.onEdit,
-                  onChanged: _loadShortcuts,
-                  selected: _selected.contains(_shortcutSummaries[index].id),
-                  running: running.contains(_shortcutSummaries[index].id),
-                  onSelect: (mods) => _handleSelect(index, mods),
-                ),
-                itemCount: _shortcutSummaries.length,
-              ),
+              child: backendStatus.current == BackendStatus.online
+                  ? GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 500.0,
+                            mainAxisExtent: 80,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                      itemBuilder: (context, index) => ShortcutCard(
+                        shortcutSummary: _shortcutSummaries[index],
+                        onEdit: widget.onEdit,
+                        onChanged: _loadShortcuts,
+                        selected: _selected.contains(
+                          _shortcutSummaries[index].id,
+                        ),
+                        running: running.contains(_shortcutSummaries[index].id),
+                        onSelect: (mods) => _handleSelect(index, mods),
+                      ),
+                      itemCount: _shortcutSummaries.length,
+                    )
+                  : Text("Backend is offline."),
             ),
           ),
         ),

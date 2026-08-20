@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' hide Step;
 import 'package:flutter/services.dart';
+import 'package:http/http.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:quartz/color_map.dart';
 import 'package:quartz/extensions.dart';
@@ -183,7 +184,31 @@ class EditorPageState extends State<EditorPage> {
             showSnackBar(context, 'Saved successfully');
           })
           .catchError((e) {
-            debugPrint('save failed: $e');
+            if (e is ClientException) {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Backend Offline'),
+                  content: Text(
+                    'Quartz cannot save the shortcut as the daemon is offline.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+              return;
+            }
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Error'),
+                content: Text('save failed: $e'),
+              ),
+            );
           });
     }
 

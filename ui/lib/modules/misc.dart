@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart';
 import 'package:material_symbols_icons/iconname_to_unicode_map.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:quartz/modules/app_picker.dart';
@@ -242,6 +243,24 @@ Future<void> runShortcutWithLog(BuildContext context, String shortcutId) {
       })
       .catchError((e) {
         if (!context.mounted) return;
+        if (e is ClientException) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Backend Offline'),
+              content: Text(
+                'Quartz cannot run the shortcut as the daemon is offline.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
