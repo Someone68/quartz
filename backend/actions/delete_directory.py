@@ -6,8 +6,13 @@ import shutil
 def _run(inputs: dict, context: dict):
     path = inputs["path"]
     recursive = inputs["recursive"]
+    error = inputs["error"]
 
     path_expanded = Path(path).expanduser()
+    if not path_expanded.exists():
+        if error:
+            raise FileNotFoundError(f"Directory does not exist: {path_expanded}")
+        return {}
     if recursive:
         shutil.rmtree(path_expanded)
     else:

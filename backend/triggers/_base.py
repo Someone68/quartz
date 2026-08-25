@@ -12,6 +12,25 @@ class Listener(Protocol):
         ...
 
 
+# --- Boot sweep flag ---
+# Set only while trigger_manager registers listeners at process start.
+# register() also runs on every shortcut create/edit/rename, and an edit is
+# not a program start, so a trigger that fires on start() must check this
+# before firing.
+_booting = threading.Event()
+
+
+def booting() -> bool:
+    return _booting.is_set()
+
+
+def set_booting(value: bool) -> None:
+    if value:
+        _booting.set()
+    else:
+        _booting.clear()
+
+
 # --- Shared polling infrastructure ---
 # Many shortcuts can share the same polling trigger (e.g. 10 clipboard
 # watchers, or 10 app-open watchers). One thread each means N identical

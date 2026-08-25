@@ -4,6 +4,7 @@ import executor
 import storage
 import trigger_registry
 from models import Shortcut
+from triggers import _base
 from triggers._base import Listener
 
 _listeners: dict[str, Listener] = {}
@@ -69,12 +70,16 @@ def refresh(shortcut: Shortcut) -> None:
 
 def start_all() -> None:
     """Boot sweep: register every eligible shortcut."""
-    for summary in storage.load_all_shortcut_summaries():
-        shortcut = storage.load_shortcut(summary.id)
-        if shortcut is None:
-            print(f"  skip, could not load: {summary.id}")
-            continue
-        register(shortcut)
+    _base.set_booting(True)
+    try:
+        for summary in storage.load_all_shortcut_summaries():
+            shortcut = storage.load_shortcut(summary.id)
+            if shortcut is None:
+                print(f"  skip, could not load: {summary.id}")
+                continue
+            register(shortcut)
+    finally:
+        _base.set_booting(False)
     print(f"Registered {len(_listeners)} trigger listeners.")
 
 

@@ -1,4 +1,5 @@
 from models import TriggerDef
+from triggers._base import booting
 
 
 class StartupListener:
@@ -7,7 +8,10 @@ class StartupListener:
         self.fire = fire
 
     def start(self):
-        self.fire({})
+        # start() runs again on every save of the shortcut, because editing
+        # one re-registers its listener. Only the boot sweep is a real start.
+        if booting():
+            self.fire({})
 
     def stop(self):
         pass

@@ -42,7 +42,7 @@ def kill_by_name(name, force=False):
 
 def _run(inputs: dict, context: dict) -> dict:
     mode = inputs.get("mode")
-    name = str(inputs.get("name")).lower()
+    name = str(inputs.get("name"))
     name_alt = inputs.get("name_alt")
     pid = inputs.get("pid")
     force = inputs.get("force", False)
@@ -112,7 +112,7 @@ ACTION = ActionDef(
             type="app",
             label="Process name",
             required=False,
-            tooltip="The process name to kill.",
+            tooltip="The process to kill. If this doesn't work, use the alternative process name field instead.",
             requires={"mode": "Name"},
         ),
         ActionInput(

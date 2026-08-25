@@ -1,29 +1,38 @@
+import getpass
 import os
+import platform
+import subprocess
 
 from models import ActionDef, ActionInput, ActionOutput
-import platform, subprocess
+
 
 def _run(inputs: dict, context: dict) -> dict:
     action = inputs["action"]
     system = platform.system()
 
+    def _user() -> str:
+        try:
+            return os.getlogin()
+        except OSError:
+            return getpass.getuser()
+
     if system == "Windows":
         cmds = {
-            "suspend":   ["rundll32.exe", "powrprof.dll,SetSuspendState", "0,1,0"],
+            "suspend": ["rundll32.exe", "powrprof.dll,SetSuspendState", "0,1,0"],
             "hibernate": ["shutdown", "/h"],
-            "poweroff":  ["shutdown", "/s", "/t", "0"],
-            "reboot":    ["shutdown", "/r", "/t", "0"],
-            "lock":      ["rundll32.exe", "user32.dll,LockWorkStation"],
-            "logout":    ["shutdown", "/l"],
+            "poweroff": ["shutdown", "/s", "/t", "0"],
+            "reboot": ["shutdown", "/r", "/t", "0"],
+            "lock": ["rundll32.exe", "user32.dll,LockWorkStation"],
+            "logout": ["shutdown", "/l"],
         }
     elif system == "Linux":
         cmds = {
-            "suspend":   ["systemctl", "suspend"],
+            "suspend": ["systemctl", "suspend"],
             "hibernate": ["systemctl", "hibernate"],
-            "poweroff":  ["systemctl", "poweroff"],
-            "reboot":    ["systemctl", "reboot"],
-            "lock":      ["loginctl", "lock-session"],
-            "logout":    ["loginctl", "terminate-user", os.getlogin()],
+            "poweroff": ["systemctl", "poweroff"],
+            "reboot": ["systemctl", "reboot"],
+            "lock": ["loginctl", "lock-session"],
+            "logout": lambda: ["loginctl", "terminate-user", _user()],
         }
     else:
         raise ValueError(system)
@@ -41,10 +50,15 @@ ACTION = ActionDef(
     color="amber",
     platforms=["linux", "windows"],
     inputs=[
-        ActionInput(name="action", type="choice", label="Action", required=True, options=["shutdown", "reboot", "suspend", "hibernate", "lock", "logout"], default="lock"),
+        ActionInput(
+            name="action",
+            type="choice",
+            label="Action",
+            required=True,
+            options=["shutdown", "reboot", "suspend", "hibernate", "lock", "logout"],
+            default="lock",
+        ),
     ],
-    outputs=[
-
-    ],
+    outputs=[],
     run=_run,
 )
