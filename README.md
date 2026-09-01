@@ -4,22 +4,35 @@ a desktop automation app for windows and linux.
 
 ## gif
 
-- insert gif here
+![gif](https://github.com/Someone68/quartz/blob/main/preview.gif?raw=true)
 
 ## Quickstart
 
 windows:
 
-- download the latest release from the [releases page](https://example.com)
+- download the latest release from the [releases page](https://github.com/Someone68/quartz/releases/latest)
 - install by running the .msix installer
 
 linux:
 
 > [!WARNING]
-> linux version requires a systemd destribution
+> requires:
+>
+> - systemd
+> - glibc 2.31+
 
 ```bash
-# i lowk forgot the script, insert here
+curl -fLO https://github.com/you/quartz/releases/latest/download/quartz-linux-x64.tar.gz
+tar xzf quartz-linux-x64.tar.gz
+cd quartz-*-linux-x64 && ./install.sh
+```
+
+uninstall:
+
+```bash
+# run the script
+~/.local/lib/quartz/uninstall.sh
+# or wherever the install script told you it was
 ```
 
 ## Features
@@ -30,7 +43,7 @@ linux:
 - material 3 flutter ui
 - simple shortcut editor
 
-## how to run it locally
+## How to run it locally
 
 **requirements**:
 
@@ -62,7 +75,16 @@ cd ui
 flutter run
 ```
 
-## what it uses and why i chose them
+building (requires docker):
+
+```bash
+docker build -t quartz-daemon-build -f packaging/docker/Dockerfile.daemon packaging/docker
+docker build -t quartz-ui-build -f packaging/docker/Dockerfile.ui packaging/docker
+
+./packaging/build.sh 0.1.0 # you can replace this with whatever u want tbh
+```
+
+## What it uses and why i chose them
 
 - Python FastAPI: very simple and fast obviously
 - Flutter UI: i was too lazy to learn react native and it comes with a ui framework
