@@ -4,6 +4,8 @@ from pathlib import Path
 
 from pydantic.main import BaseModel
 
+from subproc import clean_env
+
 def _exe_icon_b64(exe: str):
     try:
         import win32ui, win32gui, win32con, io
@@ -149,5 +151,7 @@ def launch_by_name(name: str):
     if sys.platform == 'win32':
         os.startfile(launch)
     else:
-        subprocess.Popen(['/bin/sh', '-c', launch], start_new_session=True)
+        subprocess.Popen(
+            ['/bin/sh', '-c', launch], start_new_session=True, env=clean_env()
+        )
     return {"ok": True}

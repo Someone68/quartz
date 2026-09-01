@@ -141,11 +141,12 @@ class SettingsPageState extends State<SettingsPage> {
           ),
           ListTile(
             leading: const Icon(Symbols.cable),
-            title: const Text('Port'),
+            title: const Text('Preferred port'),
             subtitle: Text(
               _config == null
                   ? 'Loading…'
-                  : 'Backend listens on ${_config!['host']}:${_config!['port']}',
+                  : 'Prefers ${_config!['port']}; '
+                        'connected on ${backendConfig.port}',
             ),
             // A text field has no intrinsic width; ListTile.trailing gives it
             // an unbounded one, which trips the InputDecorator assertion.

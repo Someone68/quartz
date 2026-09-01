@@ -22,6 +22,8 @@ import time
 
 import screen_brightness_control as sbc
 
+from subproc import clean_env
+
 # Methods to probe, in order, the first time brightness is read. Ordered
 # fastest-first; sbc's own auto-detection is not used because it retries every
 # method on every call.
@@ -51,6 +53,7 @@ def _ddcutil(*args) -> str:
         text=True,
         timeout=_DDC_TIMEOUT,
         check=True,
+        env=clean_env(),
     ).stdout
 
 

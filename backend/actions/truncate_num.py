@@ -10,7 +10,7 @@ def _run(inputs: dict, context: dict) -> dict:
     remove_zeros = bool(inputs["remove_zeros"])
     rounding = inputs["rounding"]
     if places != -1:
-        factor = 10 ** places
+        factor = 10**places
         if rounding == "round":
             result = round(value, places)
         elif rounding == "floor":

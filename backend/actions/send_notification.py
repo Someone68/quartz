@@ -3,6 +3,8 @@ from models import ActionDef, ActionInput
 
 _notifier = DesktopNotifierSync(app_name="Quartz", app_icon=None)
 
+from subproc import clean_env
+
 
 def _run(inputs: dict, context: dict) -> dict:
     title = str(inputs.get("title") or "")

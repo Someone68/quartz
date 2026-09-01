@@ -11,6 +11,8 @@ import os
 import shutil
 import subprocess
 
+from subproc import clean_env, launch_failed
+
 Icon = str  # one of: info, warning, error, question
 
 
@@ -53,6 +55,23 @@ _ZENITY_TYPE = {
 }
 
 
+def _spawn(argv: list[str]) -> subprocess.CompletedProcess:
+    """Run a dialog helper with a de-bundled environment.
+
+    stderr is captured so a dynamic-linker failure can be told apart from the
+    user simply dismissing the dialog; without that check a helper that never
+    managed to open a window looks exactly like a successful run.
+    """
+    try:
+        result = subprocess.run(argv, capture_output=True, text=True, env=clean_env())
+    except FileNotFoundError:
+        raise RuntimeError(f"{argv[0]} is not installed") from None
+    failure = launch_failed(result.stderr)
+    if failure:
+        raise RuntimeError(f"{argv[0]} could not start: {failure}")
+    return result
+
+
 def message(
     title: str,
     body: str,
@@ -66,12 +85,12 @@ def message(
 
     if be == "kdialog":
         flag = {"error": "--error", "warning": "--sorry"}.get(icon, "--msgbox")
-        subprocess.run(
+        _spawn(
             ["kdialog", "--title", title, "--icon",
              _KDIALOG_ICON.get(icon, "dialog-information"), flag, body]
         )
     elif be == "zenity":
-        subprocess.run(
+        _spawn(
             ["zenity", _ZENITY_TYPE.get(icon, "--info"),
              "--title", title, "--text", body,
              *(["--width", str(width)] if width else []),
@@ -91,17 +110,13 @@ def prompt(
     be = pick_backend(backend)
 
     if be == "kdialog":
-        r = subprocess.run(
+        r = _spawn(
             ["kdialog", "--title", title, "--icon",
-             _KDIALOG_ICON.get(icon, "dialog-question"), "--inputbox", prompt_text],
-            capture_output=True, text=True,
+             _KDIALOG_ICON.get(icon, "dialog-question"), "--inputbox", prompt_text]
         )
         return r.stdout.strip() if r.returncode == 0 else None
     elif be == "zenity":
-        r = subprocess.run(
-            ["zenity", "--entry", "--title", title, "--text", prompt_text],
-            capture_output=True, text=True,
-        )
+        r = _spawn(["zenity", "--entry", "--title", title, "--text", prompt_text])
         return r.stdout.strip() if r.returncode == 0 else None
     else:
         return _tk_prompt(title, prompt_text)

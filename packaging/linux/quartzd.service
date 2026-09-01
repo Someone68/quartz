@@ -1,0 +1,16 @@
+[Unit]
+Description=Quartz automation backend
+# Triggers like hotkeys and clipboard watching need the graphical session, so
+# start after it is up. Schedule/file triggers work without it regardless.
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/quartz/quartzd
+Restart=on-failure
+RestartSec=3
+
+[Install]
+# A user service: one daemon per logged-in (or lingering) user, with that
+# user's session env and permissions.
+WantedBy=default.target
