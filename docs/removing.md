@@ -24,14 +24,6 @@ You can uninstall Quartz on Linux using the uninstall script which is usually lo
 bash ~/.local/lib/quartz/uninstall.sh
 ```
 
-Otherwise, you can also run the uninstall script directly from the source directory:
-
-```bash
-# cd into the source directory first (may need to re-clone if you deleted it)
-cd quartz
-bash ./packaging/linux/uninstall-from-source.sh
-```
-
 ### Manual
 
 You can uninstall Quartz on Linux manually by running these commands:

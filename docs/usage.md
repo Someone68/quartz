@@ -16,27 +16,76 @@ Then just run the quartz app through an app launcher or terminal.
 
 Shortcuts are what you run, either through a trigger or manually. They consist of a series of steps that are executed in order.
 
-## Create your first shortcut
+## Steps/Actions
 
-Try creating your first shortcut by going to the editor, or pressing the "Create Shortcut" button on the dashboard. This will open an empty shortcut editor.
+Actions are parts of a shortcut that define what to do. They are executed in order, and can have their own outputs. For example, a `Run Shell Command` action can return the output of the command, which can be used in subsequent actions.
 
-### Example shortcut: Add 2 numbers
+Each step has its own ID, shown at the top of the inspector panel when selecting it (e.g. `s0`, `s1`, `s2`). These IDs are generated in the order the steps are added to the shortcut. They allow you to reference previous steps' outputs in subsequent actions.
 
-1. Press "Add Action" to open a list of available actions. Let's first ask for some input from the user. Add a "Input: Dialog Box" action.
-2. On the right, you will see an inspector with fields to configure the dialog box. Set the title and prompt (e.g. "First number:"). Make sure the backend is set correctly (see tooltip for more info.)
-3. Now let's add the second input. Press "Add Action" again and add another "Input: Dialog Box" action. Set the title and prompt (e.g. "Second number:"). Make sure the backend is set correctly (see tooltip for more info.)
-4. Click on the first dialog box action. On the bottom right of the inspector is a list of step outputs. You can reference these outputs in future steps (e.g. "{{steps.id.output1}}"). Click on the `response` output to copy its code to the clipboard.
-5. If you look closely, the `response` output is of type `string`. If you are new to programming, strings are another way to say "text". To do math with these strings, you need to convert them to numbers first.
-6. To convert a string to a number, you will need to use the "Type Cast: Cast to Number" action. Add this action to your shortcut and set the `value` field to the `response` output of the first dialog box action. (If you copied the `response` output to the clipboard earlier, you can paste it here.)
-7. Now let's add the second "Type Cast: Cast to Number" action. Set the `value` field to the `response` output of the second dialog box action. (You can copy the `response` output from the second dialog box action and paste it here.)
-8. Now we have both responses converted to numbers, and we can use them in math operations. Add the "Math: Evaluate Expression" action to your shortcut and set the `value` field to the sum of the two converted numbers. To do this, copy the `result` output from the first "Math: Evaluate Expression" action and paste it here. Then add the `+` operator and the `result` output from the second "Math: Evaluate Expression" action to get the final sum. (`value` field should look something like: `{{s2.result}} + {{s3.result}}`)
-9. With the final sum, we can show the result to the user using the "Output: Message Box" action. Set the `body` field to the `value` output of the "Math: Evaluate Expression" action. (`body` field should look something like: `{{s4.result}}`) Make sure to set the `title` field to a descriptive message so the user knows what the result is.
-10. To test your shortcut, press the save button and then run the shortcut. It should ask for two numbers and then display the sum of the two numbers in a message box.
+You can find a list of outputs for every action in the `Outputs` section shown below.
+
+![Outputs](https://github.com/Someone68/quartz/blob/main/outputs_screenshot.png?raw=true)
 
 > [!NOTE]
-> You might see that the result is a decimal number like 3.0. To turn this into an integer, use the "Math: Truncate Number" action.
+> Like in programming, every variable, action output, and trigger output has a data type associated with it (e.g. `string`, `number`, `boolean`). Sometimes to do certain actions with them, you have to change its type (e.g. `{{variables.myVar}}` is a `string`, but you might want to use it as a `number`). To allow this, the Type Cast actions allow you to change the data type of an output. (e.g. Define variable, type cast to `number`, set variable as output of type cast action)
+>
+> Generally, it doesn't matter that much, since most actions automatically cast variables to the correct type when needed. However, the value of the variable should still match its intended type.
 
-> [!TIP]
-> You can drag and drop steps in your shortcut using the grab bar on the right of each step.
+To use an output from an action, you can use the `{{steps.id.output}}` syntax in subsequent actions. For example, `{{steps.s0.stdout}}` would reference the `stdout` output of the first step. To make this easier, you can click on any output in the `Outputs` section to copy its code to the clipboard, and hover over it to see a description of it.
 
-Congratulations! You have successfully created a shortcut that uses quartz to evaluate a mathematical expression and display the result to the user. Make sure to save your shortcut and test it out to make sure it works as expected.
+## Triggers
+
+Triggers are what start your shortcuts. They can be configured to run on a schedule, or when a specific event occurs. They are very limited as of now, but still provide enough functionality.
+
+Current triggers:
+
+- On App Open
+- On App Close
+- On Clipboard Change
+- On Directory Contents Change
+- On Directory Modified
+- On File Modified
+- At a Specific Time (cron)
+- On Startup
+
+Some triggers have outputs, like On Clipboard Change, that can be used in subsequent actions. Their functionality is the same as outputs from actions, only the syntax is `{{trigger.output}}` (e.g. `{{trigger.value}}`).
+
+## Variables and Scripting
+
+> [!NOTE]
+> Scripting actions can get quite complicated, so it's recommended that you have a basic understanding of programming before using them.
+
+You can use variables and scripting in your shortcuts to make them more dynamic and powerful. Variables can store information temporarily to be used in your shortcut, and its value can be modified. To define a variable, simply use the Scripting: Set Variable action to set its type and value. To set the value of an existing variable, you can use the Scripting: Set Variable action again with the same variable name and type.
+
+To reference a variable in an action, you can use the `{{variables.name}}` syntax. For example, `{{variables.myVar}}` would reference the `myVar` variable.
+
+### If/Else Statements
+
+If/Else statements allow you to conditionally execute actions based on the value of a variable, step output, or trigger output. Generally, the syntax is the same as in Python.
+
+An example condition would be: `{{variables.myVar}} == 5`
+
+> [!WARNING]
+> When using variables in conditions, data type isn't carried over. This is especially important when dealing with strings.
+>
+> For example, if variable `myVar` is set to `hello`, `{{variables.myVar}} == "hello"` will **cause an error**, since the condition evalutes to `hello == "hello"`.
+>
+> The correct way to compare strings is to wrap your variable in quotes: `"{{variables.myVar}}" == "hello"` => `true`.
+
+### Lists and Loops
+
+You can define a variable as a list (seperate values with commas like this: `value1,value2,value3`) and use it in a loop action to iterate over its elements.
+
+For example:
+
+- Scripting: Set Variable: `myList` with type `list` and value `value1,value2,value3`
+- Scripting: Loop: `{{variables.myList}}`, item variable: `item`
+  - Output: Message Box: `{{variables.item}}`
+
+...will show 3 message boxes in order: `value1`, `value2`, `value3`.
+
+Each item is treated as a `string` type.
+
+## Example
+
+See the [example shortcut](example.md) for a step-by-step guide on creating your first shortcut.
