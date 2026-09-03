@@ -3,8 +3,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)"
-VER="${1:?usage: build.sh VERSION}"
+VER="${1:-$(tr -d '[:space:]' < "$ROOT/VERSION")}"
 OUT="$ROOT/dist/quartz-$VER-linux-x64"
+
+echo "Building version: $VER"
 
 echo "$ROOT"
 ls "$ROOT/backend/requirements.txt"
@@ -59,4 +61,4 @@ if [ "$(printf '%s\n%s' "$need_glibc" "$have_glibc" | sort -V | head -1)" != "$n
   exit 1
 fi
 
-echo "dist/quartz-$VER-linux-x64.tar.gz"
+echo "Build complete: dist/quartz-$VER-linux-x64.tar.gz"
