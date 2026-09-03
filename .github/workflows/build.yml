@@ -1,7 +1,8 @@
 name: build
 
-# Build the daemon + UI and produce installers for each OS. Runs on tags and
-# manual dispatch; artifacts are uploaded (and attached to a release on tags).
+# Build the daemon + UI and produce every distributable: .deb and .rpm, the
+# portable tarball, and the Windows installer. Runs on tags and manual
+# dispatch; on a tag all four are attached to a GitHub release.
 on:
   push:
     tags: ["v*"]
@@ -35,8 +36,18 @@ jobs:
             | sudo tee /etc/apt/sources.list.d/goreleaser.list
           sudo apt-get update && sudo apt-get install -y nfpm
 
+      # On a tag the tag *is* the version, so stamp from it and let
+      # set-version.sh reject anything that is not X.Y.Z. Off a tag the
+      # VERSION file stands on its own.
       - name: Stamp version
-        run: packaging/set-version.sh
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+            packaging/set-version.sh "${tag#v}"
+          else
+            packaging/set-version.sh
+          fi
 
       - name: Build .deb and .rpm
         run: make linux
@@ -47,6 +58,44 @@ jobs:
           path: |
             dist/*.deb
             dist/*.rpm
+
+  # The portable tarball is the install path for distros the packages do not
+  # cover, so it is built in the debian:bookworm images from packaging/docker
+  # rather than on the runner: binaries linked against the runner's much newer
+  # glibc would only run on equally new systems.
+  tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the toolchain images
+        run: |
+          docker build -t quartz-daemon-build \
+            -f packaging/docker/Dockerfile.daemon packaging/docker
+          # build.sh runs the UI image as the invoking user; bake that user in
+          # so flutter has a writable HOME (the runner is not uid 1000).
+          docker build -t quartz-ui-build \
+            --build-arg "BUILDER_UID=$(id -u)" \
+            --build-arg "BUILDER_GID=$(id -g)" \
+            -f packaging/docker/Dockerfile.ui packaging/docker
+
+      - name: Stamp version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+            packaging/set-version.sh "${tag#v}"
+          else
+            packaging/set-version.sh
+          fi
+
+      - name: Build tarball
+        run: packaging/build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-tarball
+          path: dist/quartz-*-linux-x64.tar.gz
 
   windows:
     runs-on: windows-latest
@@ -63,7 +112,13 @@ jobs:
 
       - name: Stamp version
         shell: bash
-        run: packaging/set-version.sh
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+            packaging/set-version.sh "${tag#v}"
+          else
+            packaging/set-version.sh
+          fi
 
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
@@ -81,8 +136,12 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [linux, windows]
+    needs: [linux, tarball, windows]
     runs-on: ubuntu-latest
+    # Creating the release is a write to the repo; the default token is
+    # read-only unless the job asks for more.
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -90,3 +149,5 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: artifacts/**/*
+          # A silently empty release is worse than a failed job.
+          fail_on_unmatched_files: true

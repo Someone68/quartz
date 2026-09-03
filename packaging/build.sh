@@ -8,6 +8,11 @@ OUT="$ROOT/dist/quartz-$VER-linux-x64"
 
 echo "Building version: $VER"
 
+# Create dist/ before the first container touches it. The daemon build runs
+# as root, so on a fresh clone it would create a root-owned dist/ and the
+# host-side mkdir of dist/ui-build below would then fail.
+mkdir -p "$ROOT/dist"
+
 echo "$ROOT"
 ls "$ROOT/backend/requirements.txt"
 
