@@ -8,7 +8,7 @@ UNITDIR="$HOME/.config/systemd/user"
 
 # Fail early with a useful message instead of a linker error later.
 need_glibc=2.28
-have_glibc="$(ldd --version | head -1 | grep -o '[0-9]\+\.[0-9]\+$')"
+have_glibc="$(ldd --version | sed -n '1s/.*[^0-9]\([0-9]\+\.[0-9]\+\)$/\1/p')"
 if [ "$(printf '%s\n%s' "$need_glibc" "$have_glibc" | sort -V | head -1)" != "$need_glibc" ]; then
   echo "glibc $need_glibc+ required, found $have_glibc" >&2
   echo "Build from source: ./packaging/linux/install.sh" >&2

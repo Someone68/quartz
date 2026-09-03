@@ -26,13 +26,14 @@ Requirements:
 - Windows: Visual Studio Build Tools (C++)
 - Windows: Microsoft PowerShell
 - Linux: Bash
+- Linux: nfpm
 
 Linux:
 
 ```bash
 git clone https://github.com/Someone68/quartz.git
 cd quartz
-bash ./packaging/linux/install-from-source.sh
+make from-source # you can also use `make linux|deb|rpm` to create respective packages (linux is both deb/rpm)
 # installed!
 ```
 

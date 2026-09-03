@@ -69,7 +69,7 @@ linux: deb rpm
 # packaging/linux/install.sh installs from a directory laid out like the
 # release tarball (see packaging/build.sh), so assemble that layout from the
 # staged build and run it. Installs under ~/.local; no root needed.
-from-source: stage
+install: stage
 	rm -rf $(STAGE)
 	mkdir -p $(STAGE)
 	cp $(DIST)/quartzd $(STAGE)/quartzd
