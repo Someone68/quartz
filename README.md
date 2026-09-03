@@ -21,7 +21,7 @@ linux:
 
 ```bash
 # stable release
-curl -fLO https://github.com/you/quartz/releases/latest/download/quartz-linux-x64.tar.gz
+curl -fLO https://github.com/Someone68/quartz/releases/latest/download/quartz-linux-x64.tar.gz
 tar xzf quartz-linux-x64.tar.gz
 cd quartz-*-linux-x64 && ./install.sh
 ```
