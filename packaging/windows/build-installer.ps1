@@ -29,7 +29,9 @@ if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed" }
 
 # --- 2. UI (Flutter) --------------------------------------------------------
 Push-Location "$root\ui"
-flutter build windows --release
+# material_symbols_icons drives IconData from non-constant values, which
+# the icon tree-shaker rejects; --no-tree-shake-icons keeps the full font.
+flutter build windows --release --no-tree-shake-icons
 Pop-Location
 if ($LASTEXITCODE -ne 0) { throw "flutter build windows failed" }
 $release = "$root\ui\build\windows\x64\runner\Release"

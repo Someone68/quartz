@@ -29,7 +29,9 @@ if (-not (Test-Path $venv)) { python -m venv $venv }
 
 # --- 2. UI (Flutter) --------------------------------------------------------
 Push-Location "$root\ui"
-flutter build windows --release
+# material_symbols_icons drives IconData from non-constant values, which
+# the icon tree-shaker rejects; --no-tree-shake-icons keeps the full font.
+flutter build windows --release --no-tree-shake-icons
 Pop-Location
 $release = "$root\ui\build\windows\x64\runner\Release"
 

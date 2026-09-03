@@ -33,7 +33,9 @@ docker run --rm -v "$ROOT:/src" \
   quartz-ui-build bash -euc '
     export PATH=/home/builder/flutter/bin:$PATH
     git config --global --add safe.directory /src
-    cd ui && flutter build linux --release
+    # material_symbols_icons drives IconData from non-constant values, which
+    # the icon tree-shaker rejects; --no-tree-shake-icons keeps the full font.
+    cd ui && flutter build linux --release --no-tree-shake-icons
   '
 
 echo "Creating release archive"

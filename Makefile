@@ -37,12 +37,14 @@ daemon: $(VSTAMP)
 	$(VENV)/bin/pyinstaller packaging/quartzd.spec \
 		--distpath $(DIST) --workpath build/pyinstaller -y
 
+# material_symbols_icons drives IconData from non-constant values, which the
+# icon tree-shaker rejects; --no-tree-shake-icons keeps the full font.
 ui:
 	@if [ -f $(UI_REL)/CMakeCache.txt ] && \
     ! grep -qx 'CMAKE_HOME_DIRECTORY:INTERNAL=$(CURDIR)/ui/linux' $(UI_REL)/CMakeCache.txt; then \
     echo "cmake still has stale cache, so im lowkey gonna nuke ui/build lol"; cd ui && flutter clean; \
 	fi
-	cd ui && flutter build linux --release
+	cd ui && flutter build linux --release --no-tree-shake-icons
 	mkdir -p $(DIST)
 	rm -rf $(DIST)/ui
 	cp -r ui/build/linux/x64/release/bundle $(DIST)/ui

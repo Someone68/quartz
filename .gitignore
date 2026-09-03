@@ -43,6 +43,11 @@ MANIFEST
 *.spec
 # ...except the daemon spec, which is a hand-maintained build input.
 !packaging/quartzd.spec
+# ...and the Flutter Windows runner manifest, a checked-in source file that
+# runner/CMakeLists.txt lists in add_executable(). Without this the Windows
+# build fails on a fresh clone with "Cannot find source file:
+# runner.exe.manifest".
+!ui/windows/runner/runner.exe.manifest
 
 # Installer logs
 pip-log.txt
