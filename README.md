@@ -36,6 +36,10 @@ uninstall:
 # or wherever the install script told you it was (its probably here unless you have weird file paths)
 ```
 
+macos: unsupported. you should lowkey just use the shortcuts app.
+
+other os: idk, if you can figure it out thats great!
+
 ## Features
 
 - 20+ actions
