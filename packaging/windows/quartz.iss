@@ -14,7 +14,7 @@
 ; Requires Inno Setup 6.3+ (for ArchitecturesAllowed=x64compatible).
 
 #define AppName "Quartz"
-#define AppVersion "1.0.0"
+#define AppVersion "0.2.0"
 #define AppPublisher "Quartz"
 #define AppURL "https://github.com/Someone68/quartz"
 #define UIExe "quartz.exe"

@@ -7,7 +7,7 @@
 name: quartz
 arch: amd64
 platform: linux
-version: "1.0.0"
+version: "0.2.0"
 section: utils
 priority: optional
 maintainer: Quartz <felix002m@gmail.com>
