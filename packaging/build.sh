@@ -23,7 +23,10 @@ docker run --rm -v "$ROOT:/src" -w /src \
   '
 
 echo "Building UI"
-docker run --rm -v "$ROOT:/src" -w /src \
+mkdir -p "$ROOT/dist/ui-build"
+docker run --rm -v "$ROOT:/src" \
+  -v "$ROOT/dist/ui-build:/src/ui/build" \
+  -w /src \
   --user "$(id -u):$(id -g)" \
   quartz-ui-build bash -euc '
     export PATH=/home/builder/flutter/bin:$PATH
@@ -36,7 +39,7 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 
 cp "$ROOT/dist/daemon/quartzd" "$OUT/"
 cp "$ROOT/dist/daemon/quartz-256.png" "$OUT/"
-cp -r "$ROOT/ui/build/linux/x64/release/bundle" "$OUT/ui"
+cp -r "$ROOT/dist/ui-build/linux/x64/release/bundle" "$OUT/ui"
 cp "$ROOT/packaging/linux/install.sh"    "$OUT/"
 cp "$ROOT/packaging/linux/uninstall.sh"  "$OUT/"
 cp "$ROOT/packaging/linux/quartz.desktop" "$OUT/"

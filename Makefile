@@ -38,6 +38,10 @@ daemon: $(VSTAMP)
 		--distpath $(DIST) --workpath build/pyinstaller -y
 
 ui:
+	@if [ -f $(UI_REL)/CMakeCache.txt ] && \
+    ! grep -qx 'CMAKE_HOME_DIRECTORY:INTERNAL=$(CURDIR)/ui/linux' $(UI_REL)/CMakeCache.txt; then \
+    echo "cmake still has stale cache, so im lowkey gonna nuke ui/build lol"; cd ui && flutter clean; \
+	fi
 	cd ui && flutter build linux --release
 	mkdir -p $(DIST)
 	rm -rf $(DIST)/ui
@@ -45,7 +49,7 @@ ui:
 
 icon: $(VSTAMP)
 	mkdir -p $(DIST)
-	$(VPY) packaging/gen_icon.py $(DIST)/quartz.png 256
+	$(VPY) packaging/gen_icon.py $(DIST)/quartz.png 256 packaging/icon.png
 
 stage: daemon ui icon
 
@@ -75,6 +79,7 @@ from-source: stage
 	   packaging/linux/uninstall.sh \
 	   packaging/linux/quartz.desktop \
 	   packaging/linux/quartzd.service $(STAGE)/
+	cp LICENSE $(STAGE)/
 	chmod 755 $(STAGE)/install.sh $(STAGE)/uninstall.sh \
 	          $(STAGE)/quartzd $(STAGE)/ui/quartz
 	$(STAGE)/install.sh
