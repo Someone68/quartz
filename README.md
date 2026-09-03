@@ -48,6 +48,10 @@ other os: idk, if you can figure it out thats great!
 - material 3 flutter ui
 - simple shortcut editor
 
+## Usage
+
+Refer to the [usage guide](https://github.com/Someone68/quartz/wiki/Usage)
+
 ## How to run it locally
 
 **requirements**:
