@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:quartz/config.dart';
@@ -7,21 +6,23 @@ import 'package:quartz/config.dart';
 enum BackendStatus { unknown, online, offline }
 
 class BackendMonitor {
-  final String host;
-  final int port;
+  String get host => backendConfig.host;
+  int get port => backendConfig.port;
 
   final _controller = StreamController<BackendStatus>.broadcast();
   Timer? _timer;
 
   Stream<BackendStatus> get status => _controller.stream;
   BackendStatus _lastStatus = BackendStatus.unknown;
-  Duration _interval = Duration(seconds: 1);
+  Duration _interval = const Duration(seconds: 1);
 
   BackendStatus get current => _lastStatus;
 
-  Duration _minInterval = Duration(seconds: 1);
-  Duration _maxInterval = Duration(seconds: 15);
+  final Duration _minInterval = const Duration(seconds: 1);
+  final Duration _maxInterval = const Duration(seconds: 15);
   bool _running = false;
+
+  BackendMonitor();
 
   Future<void> refresh() async {
     _timer?.cancel();
@@ -35,6 +36,8 @@ class BackendMonitor {
   }
 
   Future<void> _tick() async {
+    if (_lastStatus != BackendStatus.online) loadBackendConfig();
+
     final up = await _checkStatus();
     if (!_running) return;
     final next = up ? BackendStatus.online : BackendStatus.offline;
@@ -90,16 +93,6 @@ class BackendMonitor {
     _timer?.cancel();
     _timer = Timer(_minInterval, _tick);
   }
-
-  BackendMonitor({required this.host, required this.port});
 }
 
-final backendConfig = BackendConfig.fromJson(
-  jsonDecode(File(quartzConfigPath('config.json')).readAsStringSync())
-      as Map<String, dynamic>,
-);
-
-final backendStatus = BackendMonitor(
-  host: backendConfig.host,
-  port: backendConfig.port,
-)..start();
+final backendStatus = BackendMonitor()..start();
