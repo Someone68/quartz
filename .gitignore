@@ -345,3 +345,9 @@ app.*.symbols
 
 # zed
 .zed/
+
+# Code-signing keys. packaging/windows/make-cert.ps1 writes its .pfx into the
+# repo by default; never commit one, self-signed or not.
+*.pfx
+*.p12
+*.snk

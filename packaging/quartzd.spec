@@ -12,6 +12,8 @@ what packaging/linux/nfpm.yaml and packaging/windows/build-msix.ps1 install.
 import sys
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_data_files
+
 ROOT = Path(SPECPATH).parent
 BACKEND = ROOT / "backend"
 
@@ -60,7 +62,9 @@ hiddenimports = [
     # entry does not fail the build, it just drops that action at runtime with
     # "failed to load action ...: No module named ...".
     "croniter",
-    "plyer",
+    # Notifications. Only actions/send_notification.py imports this, and
+    # that file ships as data, so nothing on the import graph reaches it.
+    "desktop_notifier",
     "psutil",
     "pyperclip",
     "requests",
@@ -69,8 +73,6 @@ hiddenimports = [
     "tzlocal",
     "watchdog.observers",
     "zoneinfo",
-    # Tray + notifications: backends are picked at runtime by platform.
-    "plyer.platforms",
 ]
 
 if IS_LINUX:
@@ -83,7 +85,7 @@ if IS_LINUX:
         "pynput.keyboard._xorg",
         "pynput.mouse._xorg",
         "pynput._util.xorg",
-        "plyer.platforms.linux.notification",
+        "desktop_notifier.backends.dbus",
     ]
 if IS_WINDOWS:
     hiddenimports += [
@@ -93,7 +95,7 @@ if IS_WINDOWS:
         "pynput.keyboard._win32",
         "pynput.mouse._win32",
         "pynput._util.win32",
-        "plyer.platforms.win.notification",
+        "desktop_notifier.backends.winrt",
         "win32timezone",
         # Windows has no system tz database; tzlocal/zoneinfo need the wheel.
         "tzdata",
@@ -105,9 +107,12 @@ a = Analysis(
     # be on the search path when the spec is run from the repo root.
     pathex=[str(BACKEND)],
     binaries=[],
+    # desktop_notifier.common resolves resources/python.png at import time,
+    # so that package data has to be on disk or importing it raises.
     # icon.png lands at the archive root, where paths.ICON_FILE looks for it.
     datas=plugin_datas("actions")
     + plugin_datas("triggers")
+    + collect_data_files("desktop_notifier")
     + [(str(ROOT / "packaging" / "icon.png"), ".")],
     hiddenimports=hiddenimports,
     hookspath=[],

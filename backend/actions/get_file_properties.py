@@ -1,10 +1,16 @@
 import sys
 import stat
-import pwd
-import grp
 from pathlib import Path
 from datetime import datetime
 from models import ActionDef, ActionInput, ActionOutput
+
+# Unix-only stdlib. On Windows they are simply absent, and st_uid/st_gid are
+# always 0, so the owner/group *names* are just left off the result there.
+try:
+    import grp
+    import pwd
+except ImportError:
+    pwd = grp = None
 
 def file_info(path_str):
     p = Path(path_str).expanduser()
@@ -39,11 +45,12 @@ def file_info(path_str):
     })
 
     # owner/group names (unix only, may fail)
-    try:
-        info["owner_name"] = pwd.getpwuid(st.st_uid).pw_name
-        info["group_name"] = grp.getgrgid(st.st_gid).gr_name
-    except (KeyError, ImportError):
-        pass
+    if pwd is not None:
+        try:
+            info["owner_name"] = pwd.getpwuid(st.st_uid).pw_name
+            info["group_name"] = grp.getgrgid(st.st_gid).gr_name
+        except KeyError:
+            pass
 
     if p.is_symlink():
         info["symlink_target"] = str(p.readlink())
