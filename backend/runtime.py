@@ -11,6 +11,8 @@ import json
 import os
 import secrets
 import socket
+import sys
+import urllib.request
 from datetime import datetime, timezone
 
 from config import CONFIG_DIR
@@ -42,22 +44,87 @@ def _family(host: str) -> int:
     return socket.AF_INET6 if ":" in host else socket.AF_INET
 
 
-def find_free_port(host: str, preferred: int) -> int:
-    """Return ``preferred`` if it can be bound, else an OS-chosen free port.
+def reserve_port(host: str, preferred: int) -> tuple[socket.socket, int]:
+    """Bind ``preferred`` (else an OS-chosen free port) and return the socket.
 
-    Probes with a throwaway socket. A different process could grab the port
-    between here and uvicorn's own bind, but with one daemon per user on
-    loopback that race is negligible.
+    The bound socket is returned rather than just the number so the caller can
+    hand it straight to uvicorn: closing it first would reopen the window where
+    another process takes the port between the probe and the real bind.
+
+    The socket option differs by platform and must not be unified. On POSIX,
+    SO_REUSEADDR only waives TIME_WAIT, so the preferred port survives a
+    restart while a live listener still blocks the bind. On Windows the same
+    option means "bind even if another process is listening here", which would
+    hand back a port we cannot serve; SO_EXCLUSIVEADDRUSE is its opposite and
+    stops anyone doing that to us.
     """
     for port in (preferred, 0):
-        with socket.socket(_family(host), socket.SOCK_STREAM) as s:
+        s = socket.socket(_family(host), socket.SOCK_STREAM)
+        if sys.platform == "win32":
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        else:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            try:
-                s.bind((host, port))
-            except OSError:
-                continue
-            return s.getsockname()[1]
+        try:
+            s.bind((host, port))
+        except OSError:
+            s.close()
+            continue
+        return s, s.getsockname()[1]
     raise OSError("no free port available")
+
+
+def _health_url(host: str, port: int) -> str:
+    return f"http://{f'[{host}]' if ':' in host else host}:{port}/health"
+
+
+def read() -> dict | None:
+    """Parse runtime.json, or None when it is missing or unreadable."""
+    try:
+        return json.loads(RUNTIME_PATH.read_text())
+    except (OSError, ValueError):
+        return None
+
+
+def _pid_alive(pid: int) -> bool:
+    """Best-effort liveness check; True when we cannot tell."""
+    try:
+        import psutil
+
+        return psutil.pid_exists(pid)
+    except Exception:
+        return True
+
+
+def daemon_running() -> bool:
+    """True when a daemon started earlier is still serving.
+
+    Single-instance guard. The UI spawns a daemon whenever its health probe
+    times out and Windows autostart launches one at logon, so two can race.
+    A second daemon must not get as far as writing the handshake: it would
+    publish a token it never serves (the lifespan runs before uvicorn binds),
+    leaving the UI with a token the live daemon rejects with 401.
+
+    A stale runtime.json (daemon killed without cleanup) fails the health probe
+    and returns False, so a genuine restart is never blocked.
+    """
+    data = read()
+    if not data:
+        return False
+    pid, host, port = data.get("pid"), data.get("host"), data.get("port")
+    if isinstance(pid, int) and not _pid_alive(pid):
+        return False
+    if not host or not port:
+        return False
+    # No proxies: this is a loopback probe, and an http_proxy in the
+    # environment would otherwise route it (and could answer for us).
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    try:
+        with opener.open(_health_url(host, int(port)), timeout=1.0) as res:
+            body = json.loads(res.read(4096))
+    except Exception:
+        return False
+    # Confirm it is a Quartz daemon answering, not whatever else took the port.
+    return body.get("status") == "ok" and "version" in body
 
 
 def write(host: str, port: int, token: str) -> None:

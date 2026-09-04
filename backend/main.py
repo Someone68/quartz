@@ -201,20 +201,44 @@ if __name__ == "__main__":
     import uvicorn
 
     cfg = config.get_config()
+    # Refuse to start a second daemon next to a live one. Without this the
+    # loser of the race still writes runtime.json, and the UI ends up holding a
+    # token the surviving daemon rejects (401 on every authenticated call).
+    if runtime.daemon_running():
+        print("A Quartz daemon is already running; exiting.")
+        sys.exit(0)
     # config.port is the *preferred* port; fall back to an OS-chosen free port
     # if it is taken so a second daemon (or a leftover) can't wedge startup.
-    port = runtime.find_free_port(cfg.host, cfg.port)
+    # Bind here, up front: the handshake the lifespan publishes is only correct
+    # if the port is already ours, since uvicorn binds *after* lifespan startup.
+    sock, port = runtime.reserve_port(cfg.host, cfg.port)
     # Hand the chosen port and a fresh token to the serving process via env.
     # With reload=True uvicorn runs the app in a child process, so a module
     # global would not reach the lifespan; the environment does.
     os.environ["QUARTZ_PORT"] = str(port)
     os.environ.setdefault("QUARTZ_TOKEN", secrets.token_urlsafe(32))
-    # A frozen build has no importable "main" module and cannot fork a
-    # reloader child, so hand uvicorn the app object and keep reload off.
-    uvicorn.run(
-        app if paths.IS_FROZEN else "main:app",
-        host=cfg.host,
-        port=port,
-        log_level=cfg.log_level,
-        reload=not paths.IS_FROZEN,
-    )
+    if paths.IS_FROZEN:
+        # A frozen build has no importable "main" module and cannot fork a
+        # reloader child. Serve on the socket we already hold, so nothing is
+        # published before the port is definitively bound.
+        uvicorn.Server(
+            uvicorn.Config(
+                app,
+                host=cfg.host,
+                port=port,
+                log_level=cfg.log_level,
+            )
+        ).run(sockets=[sock])
+    else:
+        # Source runs keep the reloader, whose child process binds the port
+        # itself, so release the socket first. That leaves a small re-bind
+        # window, which only affects development; shipped builds take the
+        # branch above.
+        sock.close()
+        uvicorn.run(
+            "main:app",
+            host=cfg.host,
+            port=port,
+            log_level=cfg.log_level,
+            reload=True,
+        )
